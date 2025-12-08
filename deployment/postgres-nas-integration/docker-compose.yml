@@ -1,0 +1,265 @@
+version: '3.8'
+
+# =============================================================================
+# PostgreSQL NAS集成部署 - 五高五标五化
+# =============================================================================
+
+services:
+  # PostgreSQL 主节点 (Master)
+  postgres-master:
+    image: postgres:15-alpine
+    container_name: postgres-master
+    hostname: postgres-master
+    environment:
+      POSTGRES_DB: yyc3_platform
+      POSTGRES_USER: yyc_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-YYC3@Secure2025!}
+      POSTGRES_REPLICATION_USER: replica
+      POSTGRES_REPLICATION_PASSWORD: ${REPLICATION_PASSWORD:-Replica@2025!}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - /nas/data/postgres/master:/var/lib/postgresql/data
+      - /nas/logs/postgres/master:/var/log/postgresql
+      - ./configs/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./configs/postgresql/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./scripts/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yyc_admin -d yyc3_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # PostgreSQL 从节点1 (Slave)
+  postgres-slave1:
+    image: postgres:15-alpine
+    container_name: postgres-slave1
+    hostname: postgres-slave1
+    environment:
+      POSTGRES_DB: yyc3_platform
+      POSTGRES_USER: yyc_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-YYC3@Secure2025!}
+      PGUSER: replica
+      POSTGRES_MASTER_SERVICE: postgres-master
+      POSTGRES_REPLICATION_USER: replica
+      POSTGRES_REPLICATION_PASSWORD: ${REPLICATION_PASSWORD:-Replica@2025!}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - /nas/data/postgres/slave1:/var/lib/postgresql/data
+      - /nas/logs/postgres/slave1:/var/log/postgresql
+      - ./configs/postgresql/postgresql-slave.conf:/etc/postgresql/postgresql.conf
+      - ./scripts/init-slave.sh:/docker-entrypoint-initdb.d/init-slave.sh
+    ports:
+      - "5433:5432"
+    networks:
+      - postgres-network
+    restart: unless-stopped
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yyc_admin -d yyc3_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  # PostgreSQL 从节点2 (Slave)
+  postgres-slave2:
+    image: postgres:15-alpine
+    container_name: postgres-slave2
+    hostname: postgres-slave2
+    environment:
+      POSTGRES_DB: yyc3_platform
+      POSTGRES_USER: yyc_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-YYC3@Secure2025!}
+      PGUSER: replica
+      POSTGRES_MASTER_SERVICE: postgres-master
+      POSTGRES_REPLICATION_USER: replica
+      POSTGRES_REPLICATION_PASSWORD: ${REPLICATION_PASSWORD:-Replica@2025!}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - /nas/data/postgres/slave2:/var/lib/postgresql/data
+      - /nas/logs/postgres/slave2:/var/log/postgresql
+      - ./configs/postgresql/postgresql-slave.conf:/etc/postgresql/postgresql.conf
+      - ./scripts/init-slave.sh:/docker-entrypoint-initdb.d/init-slave.sh
+    ports:
+      - "5434:5432"
+    networks:
+      - postgres-network
+    restart: unless-stopped
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yyc_admin -d yyc3_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  # PgBouncer 连接池
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    container_name: pgbouncer
+    environment:
+      DATABASES_HOST: postgres-master
+      DATABASES_PORT: 5432
+      DATABASES_USER: yyc_admin
+      DATABASES_PASSWORD: ${DB_PASSWORD:-YYC3@Secure2025!}
+      DATABASES_DBNAME: yyc3_platform
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 200
+      DEFAULT_POOL_SIZE: 20
+      MIN_POOL_SIZE: 5
+      RESERVE_POOL_SIZE: 5
+      SERVER_RESET_QUERY: DISCARD ALL
+      ADMIN_USERS: yyc_admin
+      STATS_USERS: stats
+    volumes:
+      - ./configs/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
+      - ./configs/pgbouncer/users.txt:/etc/pgbouncer/users.txt
+    ports:
+      - "6432:6432"
+    networks:
+      - postgres-network
+    restart: unless-stopped
+    depends_on:
+      - postgres-master
+      - postgres-slave1
+      - postgres-slave2
+
+  # Redis 缓存层
+  redis-cache:
+    image: redis:7-alpine
+    container_name: redis-cache
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    volumes:
+      - /nas/data/redis:/data
+      - ./configs/redis/redis.conf:/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    networks:
+      - postgres-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Prometheus 监控
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /nas/data/prometheus:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - postgres-network
+    restart: unless-stopped
+
+  # Grafana 可视化
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-Admin@2025!}
+      GF_INSTALL_PLUGINS: postgresql
+    volumes:
+      - /nas/data/grafana:/var/lib/grafana
+      - ./configs/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3001:3000"
+    networks:
+      - postgres-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # pgAdmin 管理界面
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@0379.email}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-Admin@2025!}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - /nas/data/pgadmin:/var/lib/pgadmin
+      - ./configs/pgadmin/servers.json:/pgadmin4/servers.json
+    ports:
+      - "5050:80"
+    networks:
+      - postgres-network
+    restart: unless-stopped
+    depends_on:
+      - postgres-master
+
+  # 自动备份服务
+  postgres-backup:
+    image: postgres:15-alpine
+    container_name: postgres-backup
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:-YYC3@Secure2025!}
+      POSTGRES_HOST: postgres-master
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: yyc_admin
+      POSTGRES_DB: yyc3_platform
+      BACKUP_SCHEDULE: "0 2 * * *"  # 每天凌晨2点
+      BACKUP_RETENTION_DAYS: 7
+      BACKUP_PATH: /nas/backup/postgres
+    volumes:
+      - /nas/backup/postgres:/backup
+      - ./scripts/backup.sh:/backup.sh
+    command: crond -f
+    networks:
+      - postgres-network
+    restart: unless-stopped
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+
+networks:
+  postgres-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres-master-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /nas/data/postgres/master
+
+  postgres-slave1-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /nas/data/postgres/slave1
+
+  postgres-slave2-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /nas/data/postgres/slave2

@@ -1,0 +1,43 @@
+domain: "0379.world"
+ip: "8.152.195.33"
+records:
+  - { id: "yyc3-agr", name_zh: "智慧农业", subdomain: "agr" }
+  - { id: "yyc3-fb", name_zh: "餐饮服务", subdomain: "fb" }
+  - { id: "yyc3-fin", name_zh: "股票金融", subdomain: "fin" }
+  - { id: "yyc3-gov", name_zh: "智慧城市", subdomain: "gov" }
+  - { id: "yyc3-hr", name_zh: "人力资源", subdomain: "hr" }
+  - { id: "yyc3-med", name_zh: "智能医疗", subdomain: "med" }
+  - { id: "yyc3-media", name_zh: "媒体娱乐", subdomain: "media" }
+  - { id: "yyc3-manu", name_zh: "智能制造", subdomain: "manu" }
+  - { id: "yyc3-dev", name_zh: "智能编程", subdomain: "dev" }
+  - { id: "yyc3-cultural", name_zh: "智能文创", subdomain: "cultural" }
+  - { id: "yyc3-edu", name_zh: "智能教育", subdomain: "edu" }
+  - { id: "yyc3-edu-basic", name_zh: "基础教育", subdomain: "edu-basic" }
+  - { id: "yyc3-edu-higher", name_zh: "高等教育", subdomain: "edu-higher" }
+  - { id: "yyc3-energy", name_zh: "能源管理", subdomain: "energy" }
+  - { id: "yyc3-env", name_zh: "环境保护", subdomain: "env" }
+  - { id: "yyc3-law", name_zh: "法律服务", subdomain: "law" }
+  - { id: "yyc3-log", name_zh: "智慧物流", subdomain: "log" }
+  - { id: "yyc3-ent", name_zh: "实体经管", subdomain: "ent" }
+  - { id: "yyc3-real", name_zh: "地产建筑", subdomain: "real" }
+  - { id: "yyc3-retail", name_zh: "智慧零售", subdomain: "retail" }
+  - { id: "yyc3-traffic", name_zh: "智能交通", subdomain: "traffic" }
+  - { id: "yyc3-tourism", name_zh: "旅游酒店", subdomain: "tourism" }
+  - { id: "yyc3-elder", name_zh: "智慧养老", subdomain: "elder" }
+  - { id: "yyc3-api", name_zh: "技术集成", subdomain: "api" }
+  - { id: "yyc3-edc", name_zh: "教育数据中心", subdomain: "edc" }
+  - { id: "yyc3-cdc", name_zh: "数据中心", subdomain: "cdc" }
+  - { id: "yyc3-edg", name_zh: "边缘数据中心", subdomain: "edg" }
+  - { id: "yyc3-kb", name_zh: "智能知识库", subdomain: "kb" }
+  - { id: "yyc3-learn", name_zh: "提示词学习", subdomain: "learn" }
+  - { id: "yyc3-call", name_zh: "智能呼叫", subdomain: "call" }
+  - { id: "yyc3-admin", name_zh: "智能管理", subdomain: "admin" }
+  - { id: "www", name_zh: "主页", subdomain: "www" }
+  - { id: "@", name_zh: "根域", subdomain: "@" }
+  - { id: "developer", name_zh: "开发者社区", subdomain: "developer" }
+  - { id: "open-source", name_zh: "开源社区", subdomain: "open-source" }
+  - { id: "yyqz", name_zh: "运营组织", subdomain: "yyqz" }
+  - { id: "tech", name_zh: "技术社区", subdomain: "tech" }
+  - { id: "yyc", name_zh: "平台别名", subdomain: "yyc" }
+  - { id: "yyc3", name_zh: "平台别名", subdomain: "yyc3" }
+  - { id: "yanyucloud", name_zh: "品牌别名", subdomain: "yanyucloud" }

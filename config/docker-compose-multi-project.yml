@@ -1,0 +1,479 @@
+# =============================================================================
+# 0379.email 多项目协同平台 - 统一容器编排配置
+# 解决所有端口冲突，实现完美服务隔离
+# =============================================================================
+
+version: '3.8'
+
+networks:
+  # 主网络
+  0379-platform-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
+          gateway: 172.22.0.1
+
+  # 配置中心网络
+  config-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+          gateway: 172.21.0.1
+
+  # 数据库网络
+  database-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
+          gateway: 172.23.0.1
+
+volumes:
+  # 数据库数据卷
+  redis_data:
+    driver: local
+  mariadb_data:
+    driver: local
+  postgres_data:
+    driver: local
+  mongodb_data:
+    driver: local
+
+  # 应用数据卷
+  api_logs:
+    driver: local
+  admin_logs:
+    driver: local
+  llm_logs:
+    driver: local
+  mail_logs:
+    driver: local
+  mail_queue:
+    driver: local
+
+  # 监控数据卷
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+  # 配置中心数据卷
+  consul_data:
+    driver: local
+  vault_data:
+    driver: local
+
+services:
+  # =============================================================================
+  # 配置中心服务
+  # =============================================================================
+  # Consul 服务发现
+  consul:
+    image: consul:1.17
+    container_name: 0379-consul
+    restart: unless-stopped
+    networks:
+      - config-network
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    volumes:
+      - consul_data:/consul/data
+      - ./config-center/consul/config:/consul/config
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+      - CONSUL_CLIENT_INTERFACE=eth0
+    command: >
+      consul agent
+      -server
+      -bootstrap-expect=1
+      -ui
+      -bind=0.0.0.0
+      -client=0.0.0.0
+      -datacenter=0379-dc1
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # 数据库服务
+  # =============================================================================
+  # Redis 缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: 0379-redis
+    restart: unless-stopped
+    networks:
+      - database-network
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=RedisSecurePass123456
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MariaDB 关系数据库
+  mariadb:
+    image: mariadb:10.11
+    container_name: 0379-mariadb
+    restart: unless-stopped
+    networks:
+      - database-network
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./config/mariadb/init:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_ROOT_PASSWORD=RootSecurePass123456
+      - MYSQL_DATABASE=0379_email_prod
+      - MYSQL_USER=0379_user
+      - MYSQL_PASSWORD=UserSecurePass123456
+      - TZ=Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:16-alpine
+    container_name: 0379-postgres
+    restart: unless-stopped
+    networks:
+      - database-network
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./config/postgres/init:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=0379_email_postgres
+      - POSTGRES_USER=0379_pg_user
+      - POSTGRES_PASSWORD=PostgresSecurePass123456
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U 0379_pg_user"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MongoDB 文档数据库
+  mongodb:
+    image: mongo:7
+    container_name: 0379-mongodb
+    restart: unless-stopped
+    networks:
+      - database-network
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./config/mongodb/init:/docker-entrypoint-initdb.d
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=MongoSecurePass123456
+      - MONGO_INITDB_DATABASE=0379_email_docs
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # 应用服务层
+  # =============================================================================
+  # API 服务
+  api-service:
+    build:
+      context: .
+      dockerfile: ./app/api/Dockerfile
+    container_name: 0379-api-service
+    restart: unless-stopped
+    networks:
+      - 0379-platform-network
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./app/api:/app
+      - api_logs:/app/logs
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_NAME=0379_email_prod
+      - DB_USER=0379_user
+      - DB_PASSWORD=UserSecurePass123456
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=RedisSecurePass123456
+      - JWT_SECRET=JWTSecretKey0379Email2025
+      - CORS_ORIGIN=*
+    depends_on:
+      - mariadb
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # 管理后台服务
+  admin-service:
+    build:
+      context: .
+      dockerfile: ./app/admin/Dockerfile
+    container_name: 0379-admin-service
+    restart: unless-stopped
+    networks:
+      - 0379-platform-network
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./app/admin:/app
+      - admin_logs:/app/logs
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - API_URL=http://localhost:3000
+      - NEXT_PUBLIC_API_URL=http://api.0379.email
+    depends_on:
+      - api-service
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # LLM AI 服务
+  llm-service:
+    build:
+      context: .
+      dockerfile: ./app/llm/Dockerfile
+    container_name: 0379-llm-service
+    restart: unless-stopped
+    networks:
+      - 0379-platform-network
+    ports:
+      - "3002:8000"
+    volumes:
+      - ./app/llm:/app
+      - ./models:/models
+      - llm_logs:/app/logs
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+      - MODEL_PATH=/models
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=RedisSecurePass123456
+      - MAX_TOKENS=2048
+      - TEMPERATURE=0.7
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # 邮件服务
+  mail-service:
+    build:
+      context: .
+      dockerfile: ./app/mail/Dockerfile
+    container_name: 0379-mail-service
+    restart: unless-stopped
+    networks:
+      - 0379-platform-network
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./app/mail:/app
+      - mail_logs:/app/logs
+      - mail_queue:/app/queue
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      - SMTP_HOST=smtp.0379.email
+      - SMTP_PORT=587
+      - SMTP_USER=noreply@0379.email
+      - SMTP_PASSWORD=SMTPSecurePass123456
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=RedisSecurePass123456
+      - FROM_EMAIL=noreply@0379.email
+      - FROM_NAME=0379.email
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # =============================================================================
+  # API网关服务
+  # =============================================================================
+  kong:
+    image: kong:3.4
+    container_name: 0379-kong
+    restart: unless-stopped
+    networks:
+      - 0379-platform-network
+    ports:
+      - "8000:8000"    # HTTP API Gateway
+      - "8443:8443"    # HTTPS API Gateway
+      - "8001:8001"    # Admin API
+      - "8002:8002"    # Manager
+    volumes:
+      - ./config-center/kong/kong.yml:/kong.yml:ro
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/kong.yml
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001
+      - KONG_ADMIN_GUI_URL=http://localhost:8002
+    command: kong start --conf /kong.yml
+    depends_on:
+      - api-service
+      - admin-service
+      - llm-service
+      - mail-service
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # 监控服务
+  # =============================================================================
+  # Prometheus 监控
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: 0379-prometheus
+    restart: unless-stopped
+    networks:
+      - 0379-platform-network
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./config/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana 可视化
+  grafana:
+    image: grafana/grafana:latest
+    container_name: 0379-grafana
+    restart: unless-stopped
+    networks:
+      - 0379-platform-network
+    ports:
+      - "3005:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=GrafanaSecurePass123456
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=redis-datasource,grafana-piechart-panel
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # 开发工具服务
+  # =============================================================================
+  # Redis Commander - Redis 管理 UI
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: 0379-redis-commander
+    restart: unless-stopped
+    networks:
+      - 0379-platform-network
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379:RedisSecurePass123456
+    depends_on:
+      - redis
+
+  # Mongo Express - MongoDB 管理 UI
+  mongo-express:
+    image: mongo-express:latest
+    container_name: 0379-mongo-express
+    restart: unless-stopped
+    networks:
+      - 0379-platform-network
+    ports:
+      - "8082:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=MongoSecurePass123456
+      - ME_CONFIG_MONGODB_URL=mongodb://admin:MongoSecurePass123456@mongodb:27017/
+    depends_on:
+      - mongodb
+
+  # MailHog - 邮件测试工具
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: 0379-mailhog
+    restart: unless-stopped
+    networks:
+      - 0379-platform-network
+    ports:
+      - "1025:1025"  # SMTP 端口
+      - "8025:8025"  # Web UI 端口

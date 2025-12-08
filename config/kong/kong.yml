@@ -1,0 +1,278 @@
+# =============================================================================
+# Kong API Gateway 配置 - 0379.email
+# 统一API入口，路由和负载均衡
+# =============================================================================
+
+_format_version: "3.0"
+
+# 转换插件配置
+plugins:
+  - name: prometheus
+    config:
+      per_consumer: true
+
+  - name: rate-limiting
+    config:
+      minute: 100
+      hour: 1000
+
+  - name: cors
+    config:
+      origins: ["*"]
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+      headers: ["Accept", "Accept-Version", "Content-Length", "Content-MD5", "Content-Type", "Date", "Authorization"]
+      exposed_headers: ["X-Total-Count"]
+      credentials: true
+      max_age: 3600
+
+# 上游服务定义
+upstreams:
+  # API服务上游
+  - name: api-service-upstream
+    algorithm: round-robin
+    hash_on: none
+    healthchecks:
+      active:
+        http_path: /health
+        healthy:
+          interval: 10
+          successes: 3
+        unhealthy:
+          interval: 10
+          http_failures: 3
+    targets:
+      - target: localhost:3000
+        weight: 100
+
+  # 管理后台上游
+  - name: admin-service-upstream
+    algorithm: round-robin
+    hash_on: none
+    healthchecks:
+      active:
+        http_path: /health
+        healthy:
+          interval: 10
+          successes: 3
+        unhealthy:
+          interval: 10
+          http_failures: 3
+    targets:
+      - target: localhost:3001
+        weight: 100
+
+  # LLM服务上游
+  - name: llm-service-upstream
+    algorithm: round-robin
+    hash_on: none
+    healthchecks:
+      active:
+        http_path: /health
+        healthy:
+          interval: 15
+          successes: 2
+        unhealthy:
+          interval: 15
+          http_failures: 3
+    targets:
+      - target: localhost:3002
+        weight: 100
+
+  # 邮件服务上游
+  - name: mail-service-upstream
+    algorithm: round-robin
+    hash_on: none
+    healthchecks:
+      active:
+        http_path: /health
+        healthy:
+          interval: 10
+          successes: 3
+        unhealthy:
+          interval: 10
+          http_failures: 3
+    targets:
+      - target: localhost:3003
+        weight: 100
+
+# 服务定义
+services:
+  # API服务
+  - name: api-service
+    url: http://api-service-upstream
+    plugins:
+      - name: prometheus
+      - name: rate-limiting
+        config:
+          minute: 200
+          hour: 2000
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 10
+
+  # 管理后台服务
+  - name: admin-service
+    url: http://admin-service-upstream
+    plugins:
+      - name: prometheus
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 1000
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 5
+
+  # LLM服务
+  - name: llm-service
+    url: http://llm-service-upstream
+    plugins:
+      - name: prometheus
+      - name: rate-limiting
+        config:
+          minute: 50
+          hour: 500
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 20
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "X-LLM-Service:true"
+
+  # 邮件服务
+  - name: mail-service
+    url: http://mail-service-upstream
+    plugins:
+      - name: prometheus
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 1000
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 15
+
+# 路由定义
+routes:
+  # API路由
+  - name: api-route
+    service: api-service
+    paths:
+      - /api
+      - /health
+    methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    strip_path: false
+    plugins:
+      - name: cors
+
+  # 管理后台路由
+  - name: admin-route
+    service: admin-service
+    paths:
+      - /admin
+      - /manage
+    methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    strip_path: false
+    plugins:
+      - name: cors
+
+  # LLM服务路由
+  - name: llm-route
+    service: llm-service
+    paths:
+      - /llm
+      - /ai
+      - /chat
+      - /generate
+    methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    strip_path: false
+    plugins:
+      - name: cors
+
+  # 邮件服务路由
+  - name: mail-route
+    service: mail-service
+    paths:
+      - /mail
+      - /email
+      - /send
+      - /queue
+    methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    strip_path: false
+    plugins:
+      - name: cors
+
+# 消费者定义
+consumers:
+  - username: api-user
+    custom_id: api-service-user
+    plugins:
+      - name: key-auth
+        config:
+          key: api-key-0379-email-2025
+      - name: rate-limiting
+        config:
+          minute: 1000
+          hour: 10000
+
+  - username: admin-user
+    custom_id: admin-service-user
+    plugins:
+      - name: key-auth
+        config:
+          key: admin-key-0379-email-2025
+      - name: rate-limiting
+        config:
+          minute: 500
+          hour: 5000
+
+  - username: llm-user
+    custom_id: llm-service-user
+    plugins:
+      - name: key-auth
+        config:
+          key: llm-key-0379-email-2025
+      - name: rate-limiting
+        config:
+          minute: 200
+          hour: 2000
+
+  - username: mail-user
+    custom_id: mail-service-user
+    plugins:
+      - name: key-auth
+        config:
+          key: mail-key-0379-email-2025
+      - name: rate-limiting
+        config:
+          minute: 300
+          hour: 3000
+
+# 服务发现配置 (与Consul集成)
+services:
+  - name: consul-services
+    url: http://consul:8500/v1/catalog/service
+    plugins:
+      - name: prometheus

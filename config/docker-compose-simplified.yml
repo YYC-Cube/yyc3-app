@@ -1,0 +1,167 @@
+# =============================================================================
+# 0379.email 多项目协同平台 - 简化版部署配置
+# 使用本地已有镜像，确保快速启动
+# =============================================================================
+
+version: '3.8'
+
+networks:
+  0379-simple-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+    driver: local
+  api_logs:
+    driver: local
+  admin_logs:
+    driver: local
+
+services:
+  # =============================================================================
+  # Redis 缓存服务 (本地镜像可用)
+  # =============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: 0379-redis-simple
+    restart: unless-stopped
+    networks:
+      - 0379-simple-network
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --requirepass RedisSecurePass123456 --appendonly yes
+    environment:
+      - REDIS_PASSWORD=RedisSecurePass123456
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # Nginx 反向代理 (本地镜像可用)
+  # =============================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: 0379-nginx-simple
+    restart: unless-stopped
+    networks:
+      - 0379-simple-network
+    ports:
+      - "8880:80"
+      - "8000:8000"
+    volumes:
+      - ./nginx-simple.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api-service
+      - admin-service
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # API 服务 (使用本地Node.js镜像)
+  # =============================================================================
+  api-service:
+    image: node:18-alpine
+    container_name: 0379-api-simple
+    restart: unless-stopped
+    networks:
+      - 0379-simple-network
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./simple-api-server.js:/app/simple-api-server.js
+      - ./api-package.json:/app/package.json
+      - api_logs:/app/logs
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=RedisSecurePass123456
+      - SERVICE_NAME=0379.email API Service
+    command: >
+      sh -c "
+        if [ ! -d node_modules ]; then
+          npm install express --production
+        fi
+        node simple-api-server.js
+      "
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # 管理后台服务 (使用本地Node.js镜像)
+  # =============================================================================
+  admin-service:
+    image: node:18-alpine
+    container_name: 0379-admin-simple
+    restart: unless-stopped
+    networks:
+      - 0379-simple-network
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./simple-admin-server.js:/app/simple-admin-server.js
+      - admin_logs:/app/logs
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - API_URL=http://localhost:3000
+      - SERVICE_NAME=0379.email Admin Service
+    command: >
+      sh -c "
+        if [ ! -d node_modules ]; then
+          npm install express --production
+        fi
+        node simple-admin-server.js
+      "
+    depends_on:
+      - api-service
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # 简单健康检查服务
+  # =============================================================================
+  health-check:
+    image: node:18-alpine
+    container_name: 0379-health-checker
+    restart: unless-stopped
+    networks:
+      - 0379-simple-network
+    volumes:
+      - ./health-check-script.js:/app/health-check-script.js
+    working_dir: /app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - API_URL=http://api-service:3000
+      - ADMIN_URL=http://admin-service:3001
+      - NGINX_URL=http://nginx:80
+    command: >
+      sh -c "
+        npm install express axios --production &&
+        node health-check-script.js
+      "
+    depends_on:
+      - redis
+      - api-service
+      - admin-service
+      - nginx

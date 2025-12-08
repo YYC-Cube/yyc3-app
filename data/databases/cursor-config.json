@@ -1,0 +1,81 @@
+{
+  "name": "PostgreSQL MCP Server",
+  "description": "Secure PostgreSQL database access through MCP protocol",
+  "version": "1.0.0",
+  "mcpServers": {
+    "postgresql": {
+      "command": "bun",
+      "args": ["/Users/yanyu/www/postgresql-mcp-server-complete/index.ts"],
+      "cwd": "/Users/yanyu/www/postgresql-mcp-server-complete",
+      "env": {
+        "DATABASE_URL": "postgresql://username:password@localhost:5432/database_name",
+        "DANGEROUSLY_ALLOW_WRITE_OPS": "false",
+        "LOG_LEVEL": "info",
+        "MAX_QUERY_ROWS": "1000",
+        "QUERY_TIMEOUT": "30000"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "pg_query",
+      "description": "Execute SQL queries with security validation",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "SQL query to execute"
+          },
+          "parameters": {
+            "type": "array",
+            "description": "Optional parameters for parameterized queries",
+            "items": {}
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of rows to return (default: 100, max: 1000)",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "pg_list_tables",
+      "description": "List all tables in the database",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "description": "Optional schema name to filter tables"
+          },
+          "includeSystemTables": {
+            "type": "boolean",
+            "description": "Include system tables in results (default: false)"
+          }
+        }
+      }
+    },
+    {
+      "name": "pg_describe_table",
+      "description": "Get detailed table structure information",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Table name"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Schema name (default: public)"
+          }
+        },
+        "required": ["table"]
+      }
+    }
+  ]
+}

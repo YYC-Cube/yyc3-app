@@ -1,0 +1,46 @@
+{
+  "name": "yyc3-semantic-dashboard",
+  "version": "1.0.0",
+  "description": "YYC³图形化语义应用面板 - 智能脚本管理系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "bun run server.js",
+    "dev": "bun --hot run server.js",
+    "build": "bun build client/index.html --outdir dist",
+    "test": "bun test"
+  },
+  "keywords": [
+    "yyc3",
+    "semantic-dashboard",
+    "script-management",
+    "real-time-monitoring",
+    "ai-integration"
+  ],
+  "author": "YYC3 AI Family",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/plugin-transform-runtime": "^7.23.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "chart.js": "^4.4.0",
+    "react-chartjs-2": "^5.2.0",
+    "lucide-react": "^0.294.0",
+    "framer-motion": "^10.16.0",
+    "recharts": "^2.8.0",
+    "date-fns": "^2.30.0"
+  },
+  "devDependencies": {
+    "@types/babel__plugin-transform-runtime": "^7.23.0"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YYC-Cube/yyc3-smart-script-manager.git"
+  },
+  "homepage": "https://yyc3.0379.email",
+  "email": "admin@0379.email"
+}

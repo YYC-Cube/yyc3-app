@@ -1,0 +1,156 @@
+{
+  "services": [
+    {
+      "name": "0379-email-api",
+      "id": "api-service-01",
+      "address": "localhost",
+      "port": 3000,
+      "tags": ["api", "email", "primary"],
+      "meta": {
+        "version": "1.0.0",
+        "environment": "production",
+        "team": "backend"
+      },
+      "checks": [
+        {
+          "http": "http://localhost:3000/health",
+          "interval": "10s",
+          "timeout": "3s"
+        }
+      ]
+    },
+    {
+      "name": "0379-email-admin",
+      "id": "admin-service-01",
+      "address": "localhost",
+      "port": 3001,
+      "tags": ["admin", "management", "ui"],
+      "meta": {
+        "version": "1.0.0",
+        "environment": "production",
+        "team": "frontend"
+      },
+      "checks": [
+        {
+          "http": "http://localhost:3001/health",
+          "interval": "10s",
+          "timeout": "3s"
+        }
+      ]
+    },
+    {
+      "name": "0379-email-llm",
+      "id": "llm-service-01",
+      "address": "localhost",
+      "port": 3002,
+      "tags": ["ai", "llm", "intelligence"],
+      "meta": {
+        "version": "1.0.0",
+        "environment": "production",
+        "team": "ai"
+      },
+      "checks": [
+        {
+          "http": "http://localhost:3002/health",
+          "interval": "15s",
+          "timeout": "5s"
+        }
+      ]
+    },
+    {
+      "name": "0379-email-mail",
+      "id": "mail-service-01",
+      "address": "localhost",
+      "port": 3003,
+      "tags": ["mail", "email", "communication"],
+      "meta": {
+        "version": "1.0.0",
+        "environment": "production",
+        "team": "backend"
+      },
+      "checks": [
+        {
+          "http": "http://localhost:3003/health",
+          "interval": "10s",
+          "timeout": "3s"
+        }
+      ]
+    },
+    {
+      "name": "0379-redis",
+      "id": "redis-service-01",
+      "address": "localhost",
+      "port": 6379,
+      "tags": ["cache", "database", "redis"],
+      "meta": {
+        "version": "7.0",
+        "environment": "production",
+        "team": "infra"
+      },
+      "checks": [
+        {
+          "tcp": "localhost:6379",
+          "interval": "10s",
+          "timeout": "3s"
+        }
+      ]
+    },
+    {
+      "name": "0379-mariadb",
+      "id": "mariadb-service-01",
+      "address": "localhost",
+      "port": 3306,
+      "tags": ["database", "mysql", "mariadb"],
+      "meta": {
+        "version": "10.11",
+        "environment": "production",
+        "team": "infra"
+      },
+      "checks": [
+        {
+          "tcp": "localhost:3306",
+          "interval": "10s",
+          "timeout": "3s"
+        }
+      ]
+    },
+    {
+      "name": "0379-postgres",
+      "id": "postgres-service-01",
+      "address": "localhost",
+      "port": 5432,
+      "tags": ["database", "postgresql"],
+      "meta": {
+        "version": "16.0",
+        "environment": "production",
+        "team": "infra"
+      },
+      "checks": [
+        {
+          "tcp": "localhost:5432",
+          "interval": "10s",
+          "timeout": "3s"
+        }
+      ]
+    },
+    {
+      "name": "0379-mongodb",
+      "id": "mongodb-service-01",
+      "address": "localhost",
+      "port": 27017,
+      "tags": ["database", "nosql", "mongodb"],
+      "meta": {
+        "version": "7.0",
+        "environment": "production",
+        "team": "infra"
+      },
+      "checks": [
+        {
+          "tcp": "localhost:27017",
+          "interval": "10s",
+          "timeout": "3s"
+        }
+      ]
+    }
+  ]
+}

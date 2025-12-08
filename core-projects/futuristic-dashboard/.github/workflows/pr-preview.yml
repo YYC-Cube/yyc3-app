@@ -1,0 +1,109 @@
+name: PR Preview & Visual Regression
+
+on:
+  pull_request:
+    branches: [main, develop]
+    # 只在修改相关文件时触发
+    paths:
+      - 'components/**/*.tsx'
+      - 'components/**/*.ts'
+      - 'lib/theme/**'
+      - 'styles/**'
+      - 'app/**/*.tsx'
+      - '**.story.tsx'
+
+jobs:
+  visual-regression-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # 获取PR的基础分支用于比较
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: 安装依赖
+        run: |
+          corepack enable
+          pnpm install
+
+      - name: 运行快照测试
+        run: pnpm test
+        env:
+          NODE_ENV: test
+
+      - name: 构建Storybook
+        run: pnpm storybook:build
+
+      - name: PR视觉回归测试
+        uses: chromaui/action@v1
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          # 设置为PR模式
+          autoAcceptChanges: false
+          # 对比基础分支
+          baselineBranch: ${{ github.event.pull_request.base.ref }}
+          # 添加PR评论
+          exitOnceUploaded: false
+          # 上传快照但不阻止PR合并
+          exitZeroOnChanges: true
+          # 详细日志
+          trace: true
+
+      - name: 验证CSS变量使用
+        run: |
+          # 检查是否有硬编码的颜色值（简单示例）
+          if grep -r -E 'bg-\w+-[0-9]+|text-\w+-[0-9]+|border-\w+-[0-9]+' --include="*.tsx" --include="*.ts" --include="*.css" components/ | grep -v "from 'tailwind-merge'" | grep -v "\.twMerge" | grep -v "^\s*//"; then
+            echo "❌ 发现可能的硬编码颜色值，请使用CSS变量或设计令牌"
+            exit 1
+          else
+            echo "✅ CSS变量使用检查通过"
+          fi
+
+  deploy-preview:
+    needs: visual-regression-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: 安装依赖
+        run: |
+          corepack enable
+          pnpm install
+
+      - name: 构建预览版本
+        run: pnpm build
+
+      - name: 部署预览
+        if: success()
+        # 这里使用占位符，实际项目中应替换为您使用的部署服务
+        run: |
+          echo "部署预览到临时环境..."
+          # 例如使用Vercel、Netlify或您自己的部署服务
+          # 示例：npx vercel --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_SCOPE }} --preview
+          
+          # 模拟预览URL
+          PREVIEW_URL="https://pr-${{ github.event.number }}-preview.example.com"
+          
+          # 向PR添加评论
+          gh pr comment ${{ github.event.number }} --body "📸 **预览已部署**\n\n访问预览: $PREVIEW_URL\n\n查看视觉变化: 检查Chromatic报告链接\n\n> 注意: 预览环境将在PR关闭后自动清理" 
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

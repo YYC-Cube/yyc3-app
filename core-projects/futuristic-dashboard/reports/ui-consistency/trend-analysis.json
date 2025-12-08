@@ -1,0 +1,17 @@
+[
+  {
+    "date": "2025-11-21T06:44:13.253Z",
+    "totalFiles": 123,
+    "totalIssues": 10,
+    "issuesBySeverity": {
+      "high": 7,
+      "medium": 0,
+      "low": 3
+    },
+    "issuesByType": {
+      "accessibility-issue": 7,
+      "non-standard-spacing": 3
+    },
+    "duration": 0.022
+  }
+]

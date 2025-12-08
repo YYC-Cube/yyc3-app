@@ -1,0 +1,99 @@
+{
+  "timestamp": "2025-11-21T06:44:13.253Z",
+  "summary": {
+    "totalFiles": 123,
+    "totalIssues": 10,
+    "issuesBySeverity": {
+      "high": 7,
+      "medium": 0,
+      "low": 3
+    },
+    "issuesByType": {
+      "accessibility-issue": 7,
+      "non-standard-spacing": 3
+    },
+    "duration": 0.022
+  },
+  "issues": [
+    {
+      "type": "accessibility-issue",
+      "filePath": "components/industry/industry-management.tsx",
+      "line": 1,
+      "match": "<Select             id=\"industry-status-filter\"\n            value={statusFilter}\n            onValueChange={(value: any) => setStatusFilter(value)}\n          >\n            <option value=\"all\">全部状态</option>\n            <option value=\"active\">活跃</option>\n            <option value=\"inactive\">停用</option>\n            <option value=\"pending\">待审核</option>\n          </Select>",
+      "message": "表单元素缺少label或aria-label属性",
+      "severity": "high"
+    },
+    {
+      "type": "accessibility-issue",
+      "filePath": "components/industry/industry-management.tsx",
+      "line": 1,
+      "match": "<Select                 value={formData.icon}\n                onValueChange={(value) => setFormData({ ...formData, icon: value })}\n              >\n                {iconOptions.map((option) => (\n                  <option key={option.value} value={option.value}>\n                    {option.label}\n                  </option>\n                ))}\n              </Select>",
+      "message": "表单元素缺少label或aria-label属性",
+      "severity": "high"
+    },
+    {
+      "type": "accessibility-issue",
+      "filePath": "components/industry/industry-management.tsx",
+      "line": 1,
+      "match": "<Select                     value={formData.icon}\n                    onValueChange={(value) => setFormData({ ...formData, icon: value })}\n                  >\n                    {iconOptions.map((option) => (\n                      <option key={option.value} value={option.value}>\n                        {option.label}\n                      </option>\n                    ))}\n                  </Select>",
+      "message": "表单元素缺少label或aria-label属性",
+      "severity": "high"
+    },
+    {
+      "type": "accessibility-issue",
+      "filePath": "components/industry/industry-management.tsx",
+      "line": 1,
+      "match": "<Select                 value={selectedExportFormat}\n                onValueChange={(value: 'csv' | 'excel') => setSelectedExportFormat(value)}\n              >\n                <option value=\"csv\">CSV</option>\n                <option value=\"excel\">Excel</option>\n              </Select>",
+      "message": "表单元素缺少label或aria-label属性",
+      "severity": "high"
+    },
+    {
+      "type": "accessibility-issue",
+      "filePath": "components/ui/index.tsx",
+      "line": 1,
+      "match": "<input {...props} >",
+      "message": "表单元素缺少label或aria-label属性",
+      "severity": "high"
+    },
+    {
+      "type": "accessibility-issue",
+      "filePath": "components/ui/index.tsx",
+      "line": 1,
+      "match": "<select {...props} ></select>",
+      "message": "表单元素缺少label或aria-label属性",
+      "severity": "high"
+    },
+    {
+      "type": "non-standard-spacing",
+      "filePath": "components/ui/navigation-menu.tsx",
+      "line": 58,
+      "match": "p-[1px]",
+      "message": "发现非标准间距值: p-[1px]，建议使用标准间距值",
+      "severity": "low"
+    },
+    {
+      "type": "non-standard-spacing",
+      "filePath": "components/ui/scroll-area.tsx",
+      "line": 36,
+      "match": "p-[1px]",
+      "message": "发现非标准间距值: p-[1px]，建议使用标准间距值",
+      "severity": "low"
+    },
+    {
+      "type": "non-standard-spacing",
+      "filePath": "components/ui/scroll-area.tsx",
+      "line": 38,
+      "match": "p-[1px]",
+      "message": "发现非标准间距值: p-[1px]，建议使用标准间距值",
+      "severity": "low"
+    },
+    {
+      "type": "accessibility-issue",
+      "filePath": "components/ui/textarea.tsx",
+      "line": 1,
+      "match": "<textarea       className={cn(\n        'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',\n        className,\n      )}\n      ref={ref}\n      {...props}\n    ></textarea>",
+      "message": "表单元素缺少label或aria-label属性",
+      "severity": "high"
+    }
+  ]
+}

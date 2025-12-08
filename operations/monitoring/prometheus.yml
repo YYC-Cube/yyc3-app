@@ -1,0 +1,146 @@
+# Prometheus Configuration for YYC3 Future Dashboard
+# Monitors all services on yyc3-33 server
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'yyc3-monitoring'
+    server: 'yyc3-33'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # System metrics via Node Exporter
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Docker container metrics
+  - job_name: 'docker-exporter'
+    static_configs:
+      - targets: ['docker-exporter:9323']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Nginx metrics
+  - job_name: 'nginx-exporter'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Process monitoring
+  - job_name: 'process-exporter'
+    static_configs:
+      - targets: ['process-exporter:9256']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Redis metrics (via redis_exporter)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    params:
+      format: ['prometheus']
+
+  # Application services
+  # Future Dashboard
+  - job_name: 'future-dashboard'
+    static_configs:
+      - targets: ['host.docker.internal:3010']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Kanban Board
+  - job_name: 'kanban-board'
+    static_configs:
+      - targets: ['host.docker.internal:3002']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # AI Agent
+  - job_name: 'ai-agent'
+    static_configs:
+      - targets: ['host.docker.internal:3000']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Status Monitor
+  - job_name: 'status-monitor'
+    static_configs:
+      - targets: ['host.docker.internal:3001']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Backend API
+  - job_name: 'backend-api'
+    static_configs:
+      - targets: ['host.docker.internal:5010']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # Additional services monitoring
+  - job_name: 'blackbox-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - http://terra-master.com
+        - http://ai.terra-master.com
+        - http://kanban.terra-master.com
+        - http://future.terra-master.com
+        - http://monitor.terra-master.com
+        - http://api.terra-master.com
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: host.docker.internal:9115  # Blackbox exporter
+
+  # TCP connectivity monitoring
+  - job_name: 'blackbox-tcp'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+        - terra-master.com:80
+        - terra-master.com:443
+        - redis:6379
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: host.docker.internal:9115

@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "next.config.mjs",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    }
+  ],
+  "env": {
+    "PROJECT_ID": "yyc3-futuristic-dashboard",
+    "DOMAIN": "0379.world",
+    "API_BASE": "https://api.0379.world",
+    "DEPLOY_ENV": "production"
+  }
+}

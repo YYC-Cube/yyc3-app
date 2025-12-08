@@ -1,0 +1,152 @@
+name: Scheduled UI Consistency Check
+
+on:
+  # 每天凌晨2点运行（UTC时间）
+  schedule:
+    - cron: '0 2 * * *'
+  # 允许手动触发
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: '要检查的分支'
+        required: true
+        default: 'main'
+      full_scan:
+        description: '是否进行完整扫描（包括所有组件）'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  comprehensive-ui-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.branch || 'main' }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: 安装依赖
+        run: |
+          corepack enable
+          pnpm install
+
+      - name: 运行完整测试套件
+        run: pnpm test:coverage
+        env:
+          NODE_ENV: test
+          FULL_SCAN: ${{ github.event.inputs.full_scan || 'true' }}
+
+      - name: 构建Storybook
+        run: pnpm storybook:build
+
+      - name: 执行深度视觉回归测试
+        uses: chromaui/action@v1
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          # 每天运行时自动接受小幅变化
+          autoAcceptChanges: true
+          # 但仍然报告变化
+          exitZeroOnChanges: true
+          # 详细报告
+          trace: true
+          # 标签用于标识这是定时检查
+          storybookBaseDir: .storybook
+
+      - name: 分析CSS变量使用情况
+        run: |
+          # 详细分析CSS变量使用
+          echo "## CSS变量使用分析" > css-analysis-report.md
+          echo "### 使用统计" >> css-analysis-report.md
+          
+          # 统计CSS变量文件中的变量数量
+          VARS_COUNT=$(grep -c "--\w*:" lib/theme/css-variables.css || echo "0")
+          echo "- 已定义CSS变量总数: $VARS_COUNT" >> css-analysis-report.md
+          
+          # 统计组件中使用CSS变量的情况
+          COMPONENTS_USING_VARS=$(grep -r -E "var\(--\w*\)" --include="*.tsx" components/ | wc -l | tr -d ' ')
+          echo "- 使用CSS变量的组件引用次数: $COMPONENTS_USING_VARS" >> css-analysis-report.md
+          
+          # 检查可能的硬编码样式值
+          HARDCODED_COLORS=$(grep -r -E 'bg-\w+-[0-9]+|text-\w+-[0-9]+|border-\w+-[0-9]+' --include="*.tsx" components/ | grep -v "from 'tailwind-merge'" | grep -v "\.twMerge" | grep -v "^\s*//" | wc -l | tr -d ' ')
+          echo "- 可能的硬编码颜色/样式: $HARDCODED_COLORS" >> css-analysis-report.md
+          
+          # 检查组件是否正确导入主题工具
+          MISSING_THEME_IMPORTS=$(find components/ui -name "*.tsx" -exec grep -L "from 'class-variance-authority'" {} \; | wc -l | tr -d ' ')
+          echo "- 可能缺少主题工具导入的组件: $MISSING_THEME_IMPORTS" >> css-analysis-report.md
+          
+          # 生成警告（如果有问题）
+          if [ "$HARDCODED_COLORS" -gt 0 ] || [ "$MISSING_THEME_IMPORTS" -gt 0 ]; then
+            echo "### 警告" >> css-analysis-report.md
+            echo "发现潜在的UI一致性问题需要注意。" >> css-analysis-report.md
+          fi
+          
+          echo "CSS分析报告已生成: css-analysis-report.md"
+
+      - name: 创建或更新UI一致性问题
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 检查是否已有未关闭的UI一致性问题
+          EXISTING_ISSUE=$(gh issue list --repo ${{ github.repository }} --label "ui-consistency" --state open --limit 1 --json number | jq -r '.[0].number')
+          
+          # 准备问题内容
+          ISSUE_TITLE="UI一致性定期检查报告 - $(date +'%Y-%m-%d')"
+          ISSUE_BODY="## UI一致性定期检查结果\n\n"\
+          ISSUE_BODY+="**检查时间**: $(date)\n"\
+          ISSUE_BODY+="**检查分支**: ${{ github.event.inputs.branch || 'main' }}\n"\
+          ISSUE_BODY+="**完整扫描**: ${{ github.event.inputs.full_scan || 'true' }}\n\n"\
+          ISSUE_BODY+="### 测试结果\n\n"\
+          ISSUE_BODY+="✅ 单元测试: 通过\n"\
+          ISSUE_BODY+="✅ Storybook构建: 成功\n"\
+          ISSUE_BODY+="✅ 视觉回归测试: 已执行\n\n"\
+          
+          # 添加CSS分析报告
+          ISSUE_BODY+="### CSS变量使用分析\n\n"
+          ISSUE_BODY+="$(cat css-analysis-report.md)\n\n"
+          
+          # 添加操作建议
+          ISSUE_BODY+="### 后续操作\n\n"\
+          ISSUE_BODY+="1. 检查Chromatic报告中的视觉变化\n"\
+          ISSUE_BODY+="2. 修复报告中发现的任何硬编码样式\n"\
+          ISSUE_BODY+="3. 确保所有组件正确使用CSS变量\n"\
+          
+          # 如果存在未关闭的问题，更新它；否则创建新问题
+          if [ ! -z "$EXISTING_ISSUE" ] && [ "$EXISTING_ISSUE" != "null" ]; then
+            echo "更新现有UI一致性问题 #$EXISTING_ISSUE"
+            gh issue edit $EXISTING_ISSUE --title "$ISSUE_TITLE" --body "$ISSUE_BODY"
+          else
+            echo "创建新的UI一致性问题"
+            gh issue create --title "$ISSUE_TITLE" --body "$ISSUE_BODY" --label "ui-consistency" --label "automated-report"
+          fi
+
+      - name: 上传测试覆盖率报告
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+      - name: 上传Storybook构建
+        uses: actions/upload-artifact@v3
+        with:
+          name: storybook-build
+          path: storybook-static/
+          retention-days: 14
+
+      - name: 上传CSS分析报告
+        uses: actions/upload-artifact@v3
+        with:
+          name: css-analysis
+          path: css-analysis-report.md
+          retention-days: 14

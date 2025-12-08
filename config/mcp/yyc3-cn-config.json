@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "yyc3-cn-assistant": {
+      "command": "node",
+      "args": [
+        "/Users/yanyu/www/active-projects/mcp-servers/yyc3-cn-server/yyc3-cn-mcp-server.js"
+      ],
+      "env": {
+        "TRAE_CN_MODE": "development",
+        "NODE_ENV": "development"
+      },
+      "description": "YYC3 CN.app专用中文AI MCP服务器，提供完整的中文本地化开发和UI分析工具"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "yyc3-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/yanyu/www/API文档/YYC3-CN/代码/yyc3-cn-mcp-server.js"
+      ],
+      "cwd": "/Users/yanyu/www/API文档/YYC3-CN/代码",
+      "env": {
+        "NODE_ENV": "development",
+        "YYC3_CN_VERSION": "latest",
+        "NODE_OPTIONS": "--max-old-space-size=512"
+      },
+      "timeout": 30000,
+      "restart": false,
+      "transport": "stdio",
+      "settings": {
+        "loggingLevel": "info"
+      }
+    }
+  }
+}

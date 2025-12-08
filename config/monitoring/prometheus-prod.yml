@@ -1,0 +1,53 @@
+# Prometheus 监控配置
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus 自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # API 服务监控
+  - job_name: 'api-service'
+    static_configs:
+      - targets: ['api-service:3000']
+    metrics_path: '/metrics'
+
+  # Redis 监控
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  # MariaDB 监控
+  - job_name: 'mariadb'
+    static_configs:
+      - targets: ['mariadb:3306']
+
+  # Nginx 监控
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+
+  # Admin 服务监控
+  - job_name: 'admin-service'
+    static_configs:
+      - targets: ['admin-service:3001']
+    metrics_path: '/metrics'
+
+  # LLM 服务监控
+  - job_name: 'llm-service'
+    static_configs:
+      - targets: ['llm-service:8000']
+    metrics_path: '/metrics'
+
+  # Mail 服务监控
+  - job_name: 'mail-service'
+    static_configs:
+      - targets: ['mail-service:3003']
+    metrics_path: '/metrics'

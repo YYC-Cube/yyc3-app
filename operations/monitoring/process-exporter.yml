@@ -1,0 +1,43 @@
+# Process Exporter Configuration for YYC3 Future Dashboard
+# Monitors critical application processes
+
+process_names:
+  - name: "{{.Comm}}"
+    cmdline:
+    - '.+'
+
+  # Node.js applications
+  - name: "node-apps"
+    cmdline:
+    - 'node'
+    - '.*'
+
+  # PM2 managed processes
+  - name: "pm2-processes"
+    cmdline:
+    - 'PM2'
+
+  # Next.js applications
+  - name: "nextjs-apps"
+    cmdline:
+    - 'next'
+
+  # Pnpm processes
+  - name: "pnpm-processes"
+    cmdline:
+    - 'pnpm'
+
+  # Docker processes
+  - name: "docker"
+    cmdline:
+    - 'docker[d]'
+
+  # Nginx
+  - name: "nginx"
+    cmdline:
+    - 'nginx'
+
+  # Redis
+  - name: "redis"
+    cmdline:
+    - 'redis-server'

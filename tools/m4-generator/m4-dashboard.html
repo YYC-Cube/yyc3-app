@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M4智能脚本生成器 - YYC³ AI Family</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .m4-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .m4-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .m4-title {
+            font-size: 2.5rem;
+            color: #3B82F6;
+            margin-bottom: 1rem;
+        }
+
+        .m4-subtitle {
+            color: #64748B;
+            font-size: 1.1rem;
+        }
+
+        .m4-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .m4-section {
+            background: #F8FAFC;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #E2E8F0;
+        }
+
+        .m4-section h3 {
+            color: #1E293B;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 200px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+        }
+
+        .btn {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #2563EB;
+        }
+
+        .btn:disabled {
+            background: #9CA3AF;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: #10B981;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .m4-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #E2E8F0;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3B82F6;
+        }
+
+        .stat-label {
+            color: #64748B;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .template-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .template-card {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 8px;
+            border: 2px solid #E2E8F0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            border-color: #3B82F6;
+            transform: translateY(-2px);
+        }
+
+        .template-card.selected {
+            border-color: #3B82F6;
+            background: #EFF6FF;
+        }
+
+        .template-name {
+            font-weight: 600;
+            color: #1E293B;
+            margin-bottom: 0.5rem;
+        }
+
+        .template-description {
+            color: #64748B;
+            font-size: 0.875rem;
+        }
+
+        .template-category {
+            display: inline-block;
+            background: #E2E8F0;
+            color: #374151;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .result-section {
+            background: #F8FAFC;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px solid #E2E8F0;
+        }
+
+        .result-section h3 {
+            color: #1E293B;
+            margin-bottom: 1rem;
+        }
+
+        .generated-script {
+            background: #1E293B;
+            color: #F1F5F9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #64748B;
+        }
+
+        .error {
+            background: #FEF2F2;
+            color: #DC2626;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #FECACA;
+            margin-bottom: 1rem;
+        }
+
+        .success {
+            background: #F0FDF4;
+            color: #059669;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #BBF7D0;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="m4-container">
+        <div class="m4-header">
+            <h1 class="m4-title">🔧 M4智能脚本生成器</h1>
+            <p class="m4-subtitle">YYC³ AI Family - 智能化M4宏处理和脚本生成系统</p>
+            <p class="m4-subtitle">联系邮箱: admin@0379.email</p>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="m4-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-templates">5</div>
+                <div class="stat-label">可用模板</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-generated">0</div>
+                <div class="stat-label">已生成脚本</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="success-rate">100%</div>
+                <div class="stat-label">成功率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="last-update">--</div>
+                <div class="stat-label">最后更新</div>
+            </div>
+        </div>
+
+        <!-- 模板选择 -->
+        <div class="m4-section">
+            <h3>📋 选择模板</h3>
+            <div class="template-list" id="template-list">
+                <div class="template-card" data-template="web_deployment">
+                    <div class="template-name">🌐 Web应用部署</div>
+                    <div class="template-description">完整的Web应用部署脚本，包含备份、构建、部署等步骤</div>
+                    <div class="template-category">部署</div>
+                </div>
+                <div class="template-card" data-template="api_service">
+                    <div class="template-name">🚀 API服务</div>
+                    <div class="template-description">Express.js API服务模板，包含健康检查和安全配置</div>
+                    <div class="template-category">API</div>
+                </div>
+                <div class="template-card" data-template="docker_container">
+                    <div class="template-name">🐳 Docker容器</div>
+                    <div class="template-description">优化的Docker容器模板，支持多阶段构建和安全配置</div>
+                    <div class="template-category">容器化</div>
+                </div>
+                <div class="template-card" data-template="database_migration">
+                    <div class="template-name">🗄️ 数据库迁移</div>
+                    <div class="template-description">数据库迁移脚本模板，支持备份和回滚功能</div>
+                    <div class="template-category">数据库</div>
+                </div>
+                <div class="template-card" data-template="monitoring_script">
+                    <div class="template-name">👁️ 监控脚本</div>
+                    <div class="template-description">服务监控脚本，包含健康检查和告警功能</div>
+                    <div class="template-category">监控</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 配置区域 -->
+        <div class="m4-controls">
+            <div class="m4-section">
+                <h3>⚙️ 基础配置</h3>
+                <div class="form-group">
+                    <label>服务名称 *</label>
+                    <input type="text" id="service-name" placeholder="例如: my-web-app" value="yyc3-demo-app">
+                </div>
+                <div class="form-group">
+                    <label>端口号 *</label>
+                    <input type="number" id="port" placeholder="例如: 3000" value="6600">
+                </div>
+                <div class="form-group">
+                    <label>域名</label>
+                    <input type="text" id="domain" placeholder="例如: example.com" value="0379.email">
+                </div>
+                <div class="form-group">
+                    <label>环境</label>
+                    <select id="environment">
+                        <option value="development">开发环境</option>
+                        <option value="staging">测试环境</option>
+                        <option value="production" selected>生产环境</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="m4-section">
+                <h3>🔧 高级配置</h3>
+                <div class="form-group">
+                    <label>Git仓库地址</label>
+                    <input type="text" id="git-repo" placeholder="https://github.com/user/repo.git" value="https://github.com/YYC-Cube/yyc3-smart-script-manager.git">
+                </div>
+                <div class="form-group">
+                    <label>部署用户</label>
+                    <input type="text" id="deploy-user" placeholder="deploy" value="admin@0379.email">
+                </div>
+                <div class="form-group">
+                    <label>备份路径</label>
+                    <input type="text" id="backup-path" placeholder="/var/backups" value="/var/backups/yyc3">
+                </div>
+                <div class="form-group">
+                    <label>启用SSL</label>
+                    <select id="enable-ssl">
+                        <option value="true">是</option>
+                        <option value="false">否</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 生成按钮 -->
+        <div style="text-align: center; margin: 2rem 0;">
+            <button class="btn" id="generate-btn" onclick="generateScript()">
+                🔧 生成脚本
+            </button>
+            <button class="btn btn-success" id="save-btn" onclick="saveScript()" style="margin-left: 1rem;" disabled>
+                💾 保存脚本
+            </button>
+        </div>
+
+        <!-- 结果区域 -->
+        <div class="result-section" id="result-section" style="display: none;">
+            <h3>📄 生成的脚本</h3>
+            <div id="result-message"></div>
+            <textarea class="generated-script" id="generated-script" readonly></textarea>
+            <div style="margin-top: 1rem; text-align: center;">
+                <button class="btn" onclick="copyScript()">📋 复制脚本</button>
+                <button class="btn btn-success" onclick="downloadScript()" style="margin-left: 1rem;">
+                    ⬇️ 下载脚本
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedTemplate = null;
+        let currentGeneratedScript = null;
+        let currentFileName = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            setupTemplateSelection();
+            setupRealtimeClock();
+        });
+
+        // 设置模板选择
+        function setupTemplateSelection() {
+            const templateCards = document.querySelectorAll('.template-card');
+            templateCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    templateCards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedTemplate = card.dataset.template;
+                    updateFormForTemplate(selectedTemplate);
+                });
+            });
+        }
+
+        // 根据模板更新表单
+        function updateFormForTemplate(templateName) {
+            // 根据不同模板设置默认值
+            const defaults = {
+                web_deployment: {
+                    service_name: 'my-web-app',
+                    port: '3000',
+                    domain: 'example.com'
+                },
+                api_service: {
+                    service_name: 'my-api',
+                    port: '3001',
+                    domain: 'api.example.com'
+                },
+                docker_container: {
+                    service_name: 'my-app-container',
+                    port: '8080',
+                    domain: ''
+                },
+                database_migration: {
+                    service_name: 'database-migration',
+                    port: '5432',
+                    domain: ''
+                },
+                monitoring_script: {
+                    service_name: 'service-monitor',
+                    port: '80',
+                    domain: 'example.com'
+                }
+            };
+
+            const config = defaults[templateName];
+            if (config) {
+                document.getElementById('service-name').value = config.service_name;
+                document.getElementById('port').value = config.port;
+                document.getElementById('domain').value = config.domain;
+            }
+        }
+
+        // 生成脚本
+        async function generateScript() {
+            if (!selectedTemplate) {
+                showMessage('请先选择一个模板', 'error');
+                return;
+            }
+
+            const generateBtn = document.getElementById('generate-btn');
+            generateBtn.disabled = true;
+            generateBtn.textContent = '⏳ 生成中...';
+
+            try {
+                const variables = collectVariables();
+
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        templateName: selectedTemplate,
+                        variables: variables,
+                        filename: generateFileName()
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayGeneratedScript(result.content);
+                    showMessage('脚本生成成功！', 'success');
+                    currentGeneratedScript = result.content;
+                    currentFileName = generateFileName();
+                    updateStats();
+                } else {
+                    showMessage('脚本生成失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('请求失败: ' + error.message, 'error');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '🔧 生成脚本';
+            }
+        }
+
+        // 收集变量
+        function collectVariables() {
+            return {
+                service_name: document.getElementById('service-name').value,
+                port: document.getElementById('port').value,
+                domain: document.getElementById('domain').value,
+                environment: document.getElementById('environment').value,
+                git_repo: document.getElementById('git-repo').value,
+                deploy_user: document.getElementById('deploy-user').value,
+                backup_path: document.getElementById('backup-path').value,
+                enable_ssl: document.getElementById('enable-ssl').value,
+                redis_host: document.getElementById('domain').value,
+                redis_port: '6379'
+            };
+        }
+
+        // 生成文件名
+        function generateFileName() {
+            const serviceName = document.getElementById('service-name').value || 'generated';
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+            return `${serviceName}-${timestamp}.sh`;
+        }
+
+        // 显示生成的脚本
+        function displayGeneratedScript(content) {
+            const resultSection = document.getElementById('result-section');
+            const generatedScript = document.getElementById('generated-script');
+            const saveBtn = document.getElementById('save-btn');
+
+            resultSection.style.display = 'block';
+            generatedScript.value = content;
+            saveBtn.disabled = false;
+
+            // 滚动到结果区域
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 复制脚本
+        function copyScript() {
+            const textarea = document.getElementById('generated-script');
+            textarea.select();
+            document.execCommand('copy');
+            showMessage('脚本已复制到剪贴板', 'success');
+        }
+
+        // 下载脚本
+        function downloadScript() {
+            if (!currentGeneratedScript || !currentFileName) {
+                showMessage('没有可下载的脚本', 'error');
+                return;
+            }
+
+            const blob = new Blob([currentGeneratedScript], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showMessage('脚本下载成功', 'success');
+        }
+
+        // 保存脚本
+        async function saveScript() {
+            if (!currentGeneratedScript || !currentFileName) {
+                showMessage('没有可保存的脚本', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: currentGeneratedScript,
+                        filename: currentFileName
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('脚本保存成功: ' + result.path, 'success');
+                } else {
+                    showMessage('脚本保存失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type) {
+            const resultSection = document.getElementById('result-section');
+            const messageDiv = document.getElementById('result-message');
+
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
+
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // 加载统计信息
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+
+                document.getElementById('total-generated').textContent = stats.totalGenerated || 0;
+
+                if (stats.lastGenerated) {
+                    const lastUpdate = new Date(stats.lastGenerated);
+                    document.getElementById('last-update').textContent = lastUpdate.toLocaleTimeString('zh-CN');
+                }
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const totalGeneratedEl = document.getElementById('total-generated');
+            let currentCount = parseInt(totalGeneratedEl.textContent) || 0;
+            totalGeneratedEl.textContent = currentCount + 1;
+
+            const now = new Date();
+            document.getElementById('last-update').textContent = now.toLocaleTimeString('zh-CN');
+        }
+
+        // 设置实时时钟
+        function setupRealtimeClock() {
+            const updateTime = () => {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('zh-CN', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+
+                const dateString = now.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+
+                // 如果页面上有时间显示元素，可以在这里更新
+                console.log(`当前时间: ${dateString} ${timeString}`);
+            };
+
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+    </script>
+</body>
+</html>

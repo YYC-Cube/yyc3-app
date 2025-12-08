@@ -1,0 +1,274 @@
+name: UI Consistency Check
+
+on:
+  # 当PR提交或更新到main或develop分支时运行
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'components/**/*.{jsx,tsx,css,scss}'
+      - 'app/**/*.{jsx,tsx,css,scss}'
+      - 'pages/**/*.{jsx,tsx,css,scss}'
+      - 'lib/theme/**/*.{js,ts,css,scss}'
+      - 'styles/**/*.{css,scss}'
+  # 当代码推送到main分支时运行
+  push:
+    branches: [main]
+    paths:
+      - 'components/**/*.{jsx,tsx,css,scss}'
+      - 'app/**/*.{jsx,tsx,css,scss}'
+      - 'pages/**/*.{jsx,tsx,css,scss}'
+      - 'lib/theme/**/*.{js,ts,css,scss}'
+      - 'styles/**/*.{css,scss}'
+  # 定时运行（每天UTC时间02:00）
+  schedule:
+    - cron: '0 2 * * *'
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      check_depth:
+        description: '检查深度'
+        required: true
+        default: 'basic'
+        type: choice
+        options:
+          - basic
+          - detailed
+          - full
+
+jobs:
+  # 运行UI一致性检查
+  ui-consistency-check:
+    name: UI Consistency Check
+    runs-on: ubuntu-latest
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取完整历史以便比较
+
+      # 设置Node.js环境
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      # 安装依赖
+      - name: Install dependencies
+        run: pnpm install
+        env:
+          CI: true
+
+      # 运行UI一致性检查脚本
+      - name: Run UI consistency check
+        run: pnpm run ui-check
+        env:
+          # 设置CI环境变量
+          CI: true
+          # 设置检查深度
+          UI_CHECK_DEPTH: ${{ github.event.inputs.check_depth || 'basic' }}
+          # 提供GitHub Token用于创建/更新问题
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 其他环境变量
+          NODE_ENV: test
+
+      # 生成UI一致性报告
+      - name: Generate UI consistency report
+        run: pnpm run ui-generate-report
+        if: success() || failure()
+        env:
+          CI: true
+          REPORT_FORMAT: 'markdown,json'
+
+      # 保存报告作为构建产物
+      - name: Upload UI consistency report
+        uses: actions/upload-artifact@v3
+        with:
+          name: ui-consistency-report
+          path: reports/ui-consistency/
+          retention-days: 14
+
+      # 如果是PR，将报告作为评论添加到PR
+      - name: Comment on PR with report
+        if: github.event_name == 'pull_request' && (success() || failure())
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // 读取报告文件
+            let reportContent = '';
+            try {
+              reportContent = fs.readFileSync(
+                path.join(process.env.GITHUB_WORKSPACE, 'reports/ui-consistency/summary.md'),
+                'utf8'
+              );
+            } catch (error) {
+              console.error('无法读取报告文件:', error);
+              reportContent = '无法生成UI一致性报告，请查看工作流日志获取详细信息。';
+            }
+            
+            // 构建评论内容
+            const commentBody = `## 📊 UI一致性检查报告\n\n${reportContent}\n\n**注意**: 此报告由自动化工具生成。请查看详细报告了解更多信息。`;
+            
+            // 创建或更新PR评论
+            try {
+              // 检查是否已存在评论
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+              
+              const existingComment = comments.find(comment => 
+                comment.user.login === 'github-actions[bot]' && 
+                comment.body.startsWith('## 📊 UI一致性检查报告')
+              );
+              
+              if (existingComment) {
+                // 更新现有评论
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existingComment.id,
+                  body: commentBody,
+                });
+              } else {
+                // 创建新评论
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: commentBody,
+                });
+              }
+            } catch (error) {
+              console.error('无法添加评论:', error);
+            }
+
+      # 创建GitHub问题（如果发现问题）
+      - name: Create GitHub issues for UI problems
+        if: failure() && env.UI_CREATE_ISSUES == 'true'
+        run: pnpm run ui-create-issues
+        env:
+          CI: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 控制是否创建问题
+          UI_CREATE_ISSUES: 'true'
+          # 仅为高严重性问题创建问题
+          UI_ISSUE_SEVERITY_LEVEL: 'high,medium'
+
+  # 运行UI视觉回归测试
+  ui-visual-regression:
+    name: UI Visual Regression Test
+    needs: ui-consistency-check
+    runs-on: ubuntu-latest
+    # 只有在PR上才运行完整的视觉回归测试
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Install dependencies
+        run: pnpm install
+        env:
+          CI: true
+
+      # 构建Storybook
+      - name: Build Storybook
+        run: pnpm run storybook:build
+
+      # 运行Chromatic视觉回归测试
+      - name: Run Chromatic visual regression tests
+        uses: chromaui/action@v1
+        with:
+          # Chromatic项目令牌（在Chromatic.io上创建项目获取）
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          # 构建脚本
+          buildScriptName: 'storybook:build'
+          # 构建故事书的输出目录
+          storybookBuildDir: './storybook-static'
+          # 允许控制台错误（根据需要调整）
+          allowConsoleErrors: false
+          # 仅在PR上自动接受更改
+          autoAcceptChanges: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false }}
+          # 控制是否发布构建
+          exitZeroOnChanges: true
+          # 仅为PR运行增量测试
+          onlyChanged: true
+
+  # 生成UI一致性趋势报告
+  ui-consistency-trend:
+    name: UI Consistency Trend Report
+    needs: ui-consistency-check
+    runs-on: ubuntu-latest
+    # 只有在主分支上或手动触发时才生成趋势报告
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # 确保我们可以推动更改
+          persist-credentials: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Install dependencies
+        run: pnpm install
+        env:
+          CI: true
+
+      # 下载之前上传的报告
+      - name: Download UI consistency report
+        uses: actions/download-artifact@v3
+        with:
+          name: ui-consistency-report
+          path: reports/ui-consistency/
+
+      # 生成趋势报告
+      - name: Generate trend report
+        run: pnpm run ui-generate-trend
+        env:
+          CI: true
+
+      # 提交趋势数据
+      - name: Commit trend data
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add reports/ui-consistency/trend.json
+          git commit -m "chore(ui-consistency): 更新UI一致性趋势数据" || echo "没有更改可提交"
+          git push origin main
+        # 只有在主分支上才推送更改
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 如果是手动触发，则发送趋势报告通知
+      - name: Send trend report notification
+        if: github.event_name == 'workflow_dispatch'
+        run: pnpm run ui-send-trend-notification
+        env:
+          CI: true
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # 可选：Teams webhook URL
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}

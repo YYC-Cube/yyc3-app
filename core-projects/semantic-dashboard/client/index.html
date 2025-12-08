@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YYC³图形化语义应用面板 - 智能脚本管理系统</title>
+    <meta name="description" content="YYC³智能脚本生成和管理系统的图形化语义应用面板">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部导航栏 -->
+        <header class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <span class="brand-icon">🚀</span>
+                    <h1>YYC³智能脚本管理系统</h1>
+                </div>
+                <div class="nav-controls">
+                    <div class="realtime-clock">
+                        <span class="clock-label">实时时间</span>
+                        <span id="current-time" class="clock-display">--:--:--</span>
+                    </div>
+                    <div class="system-timer">
+                        <span class="timer-label">运行时间</span>
+                        <span id="system-uptime" class="timer-display">00:00:00</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 概览仪表板 -->
+            <section class="overview-section">
+                <div class="stats-grid">
+                    <div class="stat-card stat-primary">
+                        <div class="stat-icon">🖥️</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="services-running">0</div>
+                            <div class="stat-label">运行服务</div>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-success">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="active-connections">0</div>
+                            <div class="stat-label">活跃连接</div>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-warning">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="total-scripts">0</div>
+                            <div class="stat-label">脚本总数</div>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-info">
+                        <div class="stat-icon">🔄</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="update-frequency">2s</div>
+                            <div class="stat-label">更新频率</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 服务状态网格 -->
+            <section class="services-section">
+                <div class="section-header">
+                    <h2><span class="section-icon">🛰️</span>服务状态监控</h2>
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span id="connection-status">连接中...</span>
+                    </div>
+                </div>
+                <div class="services-grid" id="services-grid">
+                    <!-- 服务卡片将由JavaScript动态生成 -->
+                </div>
+            </section>
+
+            <!-- 实时数据流 -->
+            <section class="dataflow-section">
+                <div class="section-header">
+                    <h2><span class="section-icon">📈</span>实时数据流</h2>
+                    <button id="toggle-logs" class="toggle-btn">暂停日志</button>
+                </div>
+                <div class="dataflow-container">
+                    <div class="datastream" id="datastream">
+                        <div class="data-entry">
+                            <span class="timestamp">启动中...</span>
+                            <span class="message">YYC³语义面板正在初始化</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 系统资源监控 -->
+            <section class="resources-section">
+                <div class="section-header">
+                    <h2><span class="section-icon">💻</span>系统资源</h2>
+                </div>
+                <div class="resources-grid">
+                    <div class="resource-card">
+                        <h3>内存使用</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="memory-bar"></div>
+                        </div>
+                        <div class="resource-info" id="memory-info">计算中...</div>
+                    </div>
+                    <div class="resource-card">
+                        <h3>CPU使用率</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="cpu-bar"></div>
+                        </div>
+                        <div class="resource-info" id="cpu-info">计算中...</div>
+                    </div>
+                    <div class="resource-card">
+                        <h3>响应时间</h3>
+                        <div class="response-time" id="response-time">0ms</div>
+                    </div>
+                    <div class="resource-card">
+                        <h3>系统负载</h3>
+                        <div class="system-load" id="system-load">正常</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="status-bar">
+            <div class="status-left">
+                <span id="service-status">服务状态: </span>
+                <span id="last-update">最后更新: --</span>
+            </div>
+            <div class="status-center">
+                <span>YYC³ AI Family</span>
+                <span>|</span>
+                <span>言启象限，语枢智能</span>
+            </div>
+            <div class="status-right">
+                <span>admin@0379.email</span>
+                <span>|</span>
+                <span>v1.0.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 加载脚本 -->
+    <script type="module" src="/app.js"></script>
+</body>
+</html>

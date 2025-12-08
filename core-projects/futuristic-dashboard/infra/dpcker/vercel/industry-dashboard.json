@@ -1,0 +1,38 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "YYC³ Industry Dashboard",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "Request Latency",
+        "targets": [
+          {
+            "expr": "gateway_request_latency_seconds",
+            "legendFormat": "{{domain}}"
+          }
+        ]
+      },
+      {
+        "type": "piechart",
+        "title": "Authz Decisions",
+        "targets": [
+          {
+            "expr": "gateway_authz_decisions_total",
+            "legendFormat": "{{result}}"
+          }
+        ]
+      },
+      {
+        "type": "bargauge",
+        "title": "MFA Verifications",
+        "targets": [
+          {
+            "expr": "mfa_verifications_total",
+            "legendFormat": "{{user}}"
+          }
+        ]
+      }
+    ]
+  }
+}

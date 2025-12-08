@@ -1,0 +1,54 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 确保获取完整历史用于Chromatic对比
+          fetch-depth: 0
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: 安装依赖
+        run: |
+          corepack enable
+          pnpm install
+
+      - name: 代码质量检查
+        run: |
+          pnpm lint
+          pnpm typecheck
+          pnpm validate:permissions
+
+      - name: 运行单元测试（含快照测试）
+        run: pnpm test
+        env:
+          # 为测试提供环境变量
+          NODE_ENV: test
+
+      - name: 构建Storybook
+        run: pnpm storybook:build
+
+      - name: 视觉回归测试（条件执行）
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: chromaui/action@v1
+        with:
+          # 项目令牌将在GitHub仓库设置中配置
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          # 如果视觉变化过大，构建不会失败
+          exitZeroOnChanges: true
+
+      - name: 构建应用
+        run: pnpm build

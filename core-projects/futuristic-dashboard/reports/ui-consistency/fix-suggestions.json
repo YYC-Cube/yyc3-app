@@ -1,0 +1,87 @@
+{
+  "accessibility-issue": {
+    "count": 7,
+    "examples": [
+      {
+        "type": "accessibility-issue",
+        "filePath": "/Users/yanyu/www/yyc3-futuristic-dashboard/components/industry/industry-management.tsx",
+        "line": 1,
+        "match": "<Select             id=\"industry-status-filter\"\n            value={statusFilter}\n            onValueChange={(value: any) => setStatusFilter(value)}\n          >\n            <option value=\"all\">全部状态</option>\n            <option value=\"active\">活跃</option>\n            <option value=\"inactive\">停用</option>\n            <option value=\"pending\">待审核</option>\n          </Select>",
+        "message": "表单元素缺少label或aria-label属性",
+        "severity": "high"
+      },
+      {
+        "type": "accessibility-issue",
+        "filePath": "/Users/yanyu/www/yyc3-futuristic-dashboard/components/industry/industry-management.tsx",
+        "line": 1,
+        "match": "<Select                 value={formData.icon}\n                onValueChange={(value) => setFormData({ ...formData, icon: value })}\n              >\n                {iconOptions.map((option) => (\n                  <option key={option.value} value={option.value}>\n                    {option.label}\n                  </option>\n                ))}\n              </Select>",
+        "message": "表单元素缺少label或aria-label属性",
+        "severity": "high"
+      },
+      {
+        "type": "accessibility-issue",
+        "filePath": "/Users/yanyu/www/yyc3-futuristic-dashboard/components/industry/industry-management.tsx",
+        "line": 1,
+        "match": "<Select                     value={formData.icon}\n                    onValueChange={(value) => setFormData({ ...formData, icon: value })}\n                  >\n                    {iconOptions.map((option) => (\n                      <option key={option.value} value={option.value}>\n                        {option.label}\n                      </option>\n                    ))}\n                  </Select>",
+        "message": "表单元素缺少label或aria-label属性",
+        "severity": "high"
+      },
+      {
+        "type": "accessibility-issue",
+        "filePath": "/Users/yanyu/www/yyc3-futuristic-dashboard/components/industry/industry-management.tsx",
+        "line": 1,
+        "match": "<Select                 value={selectedExportFormat}\n                onValueChange={(value: 'csv' | 'excel') => setSelectedExportFormat(value)}\n              >\n                <option value=\"csv\">CSV</option>\n                <option value=\"excel\">Excel</option>\n              </Select>",
+        "message": "表单元素缺少label或aria-label属性",
+        "severity": "high"
+      },
+      {
+        "type": "accessibility-issue",
+        "filePath": "/Users/yanyu/www/yyc3-futuristic-dashboard/components/ui/index.tsx",
+        "line": 1,
+        "match": "<input {...props} >",
+        "message": "表单元素缺少label或aria-label属性",
+        "severity": "high"
+      }
+    ],
+    "recommendation": "为所有表单元素添加label或aria-label属性"
+  },
+  "non-standard-spacing": {
+    "count": 3,
+    "examples": [
+      {
+        "type": "non-standard-spacing",
+        "filePath": "/Users/yanyu/www/yyc3-futuristic-dashboard/components/ui/navigation-menu.tsx",
+        "line": 58,
+        "match": "p-[1px]",
+        "message": "发现非标准间距值: p-[1px]，建议使用标准间距值",
+        "severity": "low"
+      },
+      {
+        "type": "non-standard-spacing",
+        "filePath": "/Users/yanyu/www/yyc3-futuristic-dashboard/components/ui/scroll-area.tsx",
+        "line": 36,
+        "match": "p-[1px]",
+        "message": "发现非标准间距值: p-[1px]，建议使用标准间距值",
+        "severity": "low"
+      },
+      {
+        "type": "non-standard-spacing",
+        "filePath": "/Users/yanyu/www/yyc3-futuristic-dashboard/components/ui/scroll-area.tsx",
+        "line": 38,
+        "match": "p-[1px]",
+        "message": "发现非标准间距值: p-[1px]，建议使用标准间距值",
+        "severity": "low"
+      }
+    ],
+    "recommendation": "使用标准间距值: 2, 4, 8, 12, 16, 24, 32, 48, 64px"
+  },
+  "hardcoded-color": {
+    "recommendation": "将硬编码颜色值替换为CSS变量或主题类，如 bg-primary-500 或 bg-[var(--primary-500)]"
+  },
+  "component-import-issue": {
+    "recommendation": "从包根目录导入组件，如 import { Button } from @/components/ui/Button"
+  },
+  "theme-consistency-issue": {
+    "recommendation": "为所有颜色类添加对应的深色模式变体，如 dark:bg-dark-surface-primary"
+  }
+}

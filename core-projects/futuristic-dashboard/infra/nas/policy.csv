@@ -1,0 +1,10 @@
+p, admin, *, *, *
+p, editor, med, kb, read
+p, editor, med, kb, write
+p, viewer, med, kb, read
+p, editor, retail, dashboard, read
+p, viewer, retail, dashboard, read
+
+g, alice, admin
+g, bob, editor
+g, carol, viewer

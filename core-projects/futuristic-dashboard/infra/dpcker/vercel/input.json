@@ -1,0 +1,13 @@
+{
+  "user": {
+    "id": "bob",
+    "role": "editor"
+  },
+  "resource": {
+    "domain": "med",
+    "sensitivity": "low"
+  },
+  "device": {
+    "compliant": true
+  }
+}

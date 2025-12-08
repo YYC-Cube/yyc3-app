@@ -1,0 +1,67 @@
+{
+  "name": "postgresql-mcp-server",
+  "version": "1.0.0",
+  "description": "A comprehensive PostgreSQL MCP server for secure database access through AI development tools",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run index.ts",
+    "build": "bun build index.ts --outfile dist/index.js --format esm --target node",
+    "start": "bun run index.ts",
+    "test": "bun test",
+    "test:unit": "bun test tests/unit.test.ts",
+    "test:integration": "bun test tests/integration.test.ts",
+    "test:watch": "bun test --watch",
+    "inspect": "npx @modelcontextprotocol/inspector bun run index.ts",
+    "lint": "bun lint --fix",
+    "format": "bun prettier --write .",
+    "type-check": "bun tsc --noEmit",
+    "setup": "bash scripts/setup.sh",
+    "deploy": "bash scripts/deploy.sh",
+    "docker:build": "docker build -t postgresql-mcp-server .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env postgresql-mcp-server"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "postgres": "^3.4.7",
+    "zod": "^3.25.76",
+    "hono": "^4.0.0",
+    "@hono/node-server": "^1.13.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.6",
+    "typescript": "^5.9.3",
+    "@types/node": "^22.0.0",
+    "prettier": "^3.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "typescript-eslint/parser": "^8.0.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "bun": ">=1.0.0",
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "postgresql",
+    "database",
+    "ai",
+    "cursor",
+    "claude",
+    "typescript",
+    "bun"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/postgresql-mcp-server"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/postgresql-mcp-server/issues"
+  },
+  "homepage": "https://github.com/yourusername/postgresql-mcp-server#readme"
+}

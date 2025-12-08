@@ -1,0 +1,46 @@
+# Prometheus 生产环境配置
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: '0379-platform'
+
+# 抓取配置
+scrape_configs:
+  # Prometheus自监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # API服务监控
+  - job_name: 'api-service'
+    static_configs:
+      - targets: ['api-service:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # 管理后台监控
+  - job_name: 'admin-service'
+    static_configs:
+      - targets: ['admin-service:3001']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Redis监控
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  # LLM服务监控
+  - job_name: 'llm-service'
+    static_configs:
+      - targets: ['llm-service:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # 邮件服务监控
+  - job_name: 'mail-service'
+    static_configs:
+      - targets: ['mail-service:3003']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
