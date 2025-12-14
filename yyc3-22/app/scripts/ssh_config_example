@@ -1,0 +1,210 @@
+# ~/.ssh/config - SSH配置文件示例
+# 适用于多设备、多账号阿里云服务器和Docker/GitHub联动
+
+# ========================= 全局配置 =========================
+Host *
+    # 连接优化
+    ServerAliveInterval 60        # 保持连接活跃，每60秒发送一次心跳包
+    ServerAliveCountMax 3         # 失败3次后断开连接
+    ConnectTimeout 10             # 连接超时时间10秒
+    Compression yes               # 启用压缩，加速传输
+    TCPKeepAlive yes              # 保持TCP连接
+    
+    # 安全设置
+    StrictHostKeyChecking yes     # 严格主机密钥检查
+    UserKnownHostsFile ~/.ssh/known_hosts
+    IdentitiesOnly yes            # 只使用指定的私钥，防止身份验证问题
+    
+    # 性能优化
+    ControlMaster auto            # 复用SSH连接
+    ControlPath ~/.ssh/control:%h:%p:%r
+    ControlPersist 10m            # 连接保持10分钟
+
+# ========================= 环境分组 =========================
+
+# 本地局域网设备
+Host local-*
+    IdentityFile ~/.ssh/id_rsa_local
+    
+# 阿里云服务器分组
+Host aliyun-*
+    User root
+    Port 22
+    IdentityFile ~/.ssh/id_rsa_aliyun
+    ForwardAgent yes              # 转发SSH代理，便于在服务器上访问GitHub
+
+# 开发环境服务器
+Host dev-*
+    User yanyu
+    IdentityFile ~/.ssh/id_rsa_dev
+
+# 生产环境服务器
+Host prod-*
+    User root
+    IdentityFile ~/.ssh/id_rsa_prod
+    LogLevel ERROR                # 生产环境减少日志输出
+
+# ========================= 本地设备 =========================
+
+# MacBook Pro M4 Max - 本地开发机
+Host local-macbook-m4max
+    HostName 192.168.3.22
+    User yyc3-22
+    IdentityFile ~/.ssh/id_rsa_local
+    
+# Apple M4 - 本地开发机
+Host local-imac-m4
+    HostName 192.168.3.77
+    User yyc3-77
+    IdentityFile ~/.ssh/id_rsa_local
+    
+# Huawei MateBook X Pro
+Host local-huawei
+    HostName 192.168.3.66
+    User administrator
+    IdentityFile ~/.ssh/id_rsa_local
+    
+# NAS服务器 - 铁威马F4-423
+# 系统管理员：YYC
+# 主机名称：yyc3-45
+Host local-nas
+    HostName 192.168.3.45
+    User YYC
+    IdentityFile ~/.ssh/id_rsa_local
+    Port 57                       # NAS使用非标准SSH端口
+
+# ========================= 阿里云服务器 =========================
+
+# 阿里云ECS - 华北2 - Alibaba Cloud Linux 3.2104 LTS
+Host aliyun-ecs-33
+HostName 8.152.195.33
+User root
+Port 22
+IdentityFile ~/.ssh/id_rsa_aliyun
+ForwardAgent yes
+
+# 阿里云ECS - 华北6 - Ubuntu 22.04
+Host aliyun-ecs-121
+HostName 8.152.195.33
+User root
+Port 22
+IdentityFile ~/.ssh/id_rsa_aliyun
+ForwardAgent yes
+
+# ========================= GitHub 配置 =========================
+
+# GitHub 主仓 - YYC-Cube
+Host github.com-cube
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa_github_cube
+
+# GitHub 副仓 - YY-Neuxs
+Host github.com-neuxs
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa_github_neuxs
+
+# ========================= Docker 远程访问 =========================
+
+# Docker 远程操作
+Host docker-remote
+    HostName localhost
+    Port 2375
+    User yanyuit
+    IdentityFile ~/.ssh/id_rsa_docker
+
+# ========================= 快捷访问配置 =========================
+
+# 快捷访问别名 - yyc3-IP尾数格式
+# 本地MacBook (IP: 192.168.3.22)
+Host yyc3-22
+    HostName 192.168.3.22
+    User yyc3-22
+    IdentityFile ~/.ssh/id_rsa_local
+
+# 阿里云服务器ECS-121 (IP: 8.152.195.33)
+Host yyc3-121
+    HostName 8.152.195.33
+    User root
+    IdentityFile ~/.ssh/id_rsa_aliyun
+    ForwardAgent yes
+
+# 阿里云服务器ECS-33 (IP: 8.152.195.33)
+Host yyc3-33
+    HostName 8.152.195.33
+    User root
+    IdentityFile ~/.ssh/id_rsa_aliyun
+    ForwardAgent yes
+
+# Apple M4 - 本地开发机 (IP: 192.168.3.77)
+Host yyc3-77
+    HostName 192.168.3.77
+    User yyc3-77
+    IdentityFile ~/.ssh/id_rsa_local
+
+# NAS服务器 - 铁威马F4-423 (IP: 192.168.3.45)
+Host yyc3-45
+    HostName 192.168.3.45
+    User YYC
+    Port 57
+    IdentityFile ~/.ssh/id_rsa_local
+
+# 其他快捷访问别名
+Host ecs-33
+    HostName 8.152.195.33
+    User root
+    IdentityFile ~/.ssh/id_rsa_aliyun
+
+Host ecs-121
+    HostName 8.152.195.33
+    User root
+    IdentityFile ~/.ssh/id_rsa_aliyun
+
+Host mac
+    HostName 192.168.3.22
+    User yyc3-22
+    IdentityFile ~/.ssh/id_rsa_local
+
+# 系统管理员：YYC
+# 主机名称：yyc3-45
+Host nas
+    HostName 192.168.3.45
+    User YYC
+    Port 57
+    IdentityFile ~/.ssh/id_rsa_local
+
+# ========================= 使用说明 =========================
+# 1. 将此文件保存为 ~/.ssh/config
+# 2. 设置正确的文件权限: chmod 600 ~/.ssh/config
+# 3. 确保所有密钥文件也有正确权限: chmod 600 ~/.ssh/id_rsa_*
+# 4. 连接示例 - yyc3-IP尾数格式（推荐）：
+#    - 连接本地MacBook: ssh yyc3-22    # IP: 192.168.3.22
+#    - 连接阿里云服务器: ssh yyc3-121  # IP: 8.152.195.33
+#    - 连接阿里云服务器: ssh yyc3-33   # IP: 8.152.195.33
+#    - 连接本地iMac: ssh yyc3-77       # IP: 192.168.3.77
+#    - 连接NAS服务器: ssh yyc3-45      # IP: 192.168.3.45
+# 5. 其他连接方式（保持兼容）：
+#    - 连接本地MacBook: ssh local-macbook-m4max 或 ssh mac
+#    - 连接阿里云服务器: ssh aliyun-ecs-33 或 ssh ecs-33
+#    - 连接阿里云服务器: ssh aliyun-ecs-121 或 ssh ecs-121
+#    - 连接GitHub主仓: git clone git@github.com-cube:YYC-Cube/repo.git
+#    - 连接GitHub副仓: git clone git@github.com-neuxs:YY-Neuxs/repo.git
+#
+# 5. Docker联动示例：
+#    - 设置环境变量: export DOCKER_HOST=ssh://docker-remote
+#    - 然后正常使用Docker命令: docker ps
+#
+# 6. 为不同服务器创建不同的密钥：
+#    - ssh-keygen -t ed25519 -f ~/.ssh/id_rsa_aliyun -C "aliyun-ecs"
+#    - 将公钥添加到服务器: ssh-copy-id -i ~/.ssh/id_rsa_aliyun.pub root@8.152.195.33
+#
+# 安全建议：
+# - 使用不同的密钥对管理不同环境的服务器
+# - 定期更新SSH密钥（建议每3-6个月更换一次）
+# - 生产环境考虑修改默认SSH端口
+# - 配置防火墙只允许特定IP访问SSH端口
+# - 启用密钥认证，禁用密码登录
+# - 考虑使用SSH证书认证替代传统密钥对
+#
+# 注意：此配置文件基于实际设备信息生成，请根据实际环境需求进行调整。 🌹

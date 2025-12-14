@@ -1,0 +1,67 @@
+# Prometheus配置文件
+# 版本：1.0.0
+# 创建日期：2024-01-15
+
+# 全局配置
+global:
+  scrape_interval: 15s  # 采集间隔
+  evaluation_interval: 15s  # 规则评估间隔
+  external_labels:
+    monitor: 'yyc3-monitor'  # 外部标签
+
+# 警报管理器配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']  # AlertManager地址
+
+# 规则文件配置
+rule_files:
+  - "rules/*.yml"  # 警报规则文件路径
+
+# 抓取配置
+scrape_configs:
+  # 监控Prometheus自身
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # 监控Grafana
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+
+  # 监控Redis API服务
+  - job_name: 'redis-api'
+    static_configs:
+      - targets: ['redis-api-server:3101']
+
+  # 监控Mail服务
+  - job_name: 'mail-api'
+    static_configs:
+      - targets: ['mail-server:3105']
+
+  # 监控API服务
+  - job_name: 'api-server'
+    static_configs:
+      - targets: ['api-server:3000']
+
+  # 监控Admin服务
+  - job_name: 'admin-server'
+    static_configs:
+      - targets: ['admin-server:3001']
+
+  # 监控LLM服务
+  - job_name: 'llm-server'
+    static_configs:
+      - targets: ['llm-server:3002']
+
+  # 监控Nginx
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+
+  # 监控节点（可选，用于主机监控）
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']

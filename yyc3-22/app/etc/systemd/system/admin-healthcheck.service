@@ -1,0 +1,12 @@
+[Unit]
+Description=Healthcheck for admin-server
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/env bash /Users/yanyu/0379.email/healthcheck/ping.sh admin 3001
+User=yanyu
+Group=staff
+
+[Install]
+WantedBy=multi-user.target

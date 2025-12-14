@@ -1,0 +1,75 @@
+# Generating ZIP package with Wiki search script, Helm changelog integration, and CI/CD changelog push logic
+
+import os
+import zipfile
+
+# Create necessary directories and files
+os.makedirs("/mnt/data/www/email/wiki", exist_ok=True)
+os.makedirs("/mnt/data/www/email/helm", exist_ok=True)
+os.makedirs("/mnt/data/www/email/docs", exist_ok=True)
+
+# Wiki Home.md with embedded search script
+wiki_home_md = """# 0379.email 多服务平台 Wiki
+
+欢迎使用 0379.email 多服务平台文档。
+
+## 🔍 搜索功能
+
+<input type="text" id="searchInput" placeholder="输入关键词搜索..." style="width: 100%; padding: 8px; font-size: 16px;">
+
+<div id="searchResults"></div>
+
+<script>
+const pages = [
+  { title: "架构白皮书", path: "architecture_whitepaper.md", content: "Nginx TLS Swagger Helm Chart CI/CD" },
+  { title: "版本记录", path: "../docs/changelog.html", content: "v1.2.0 v1.3.0 Helm TLS GitLab CI" },
+  { title: "版本对比", path: "../docs/changelog-diff.html", content: "新增 修改 删除 Helm TLS GitLab CI" }
+];
+
+document.getElementById("searchInput").addEventListener("input", function() {
+  const keyword = this.value.toLowerCase();
+  const results = pages.filter(p => p.title.toLowerCase().includes(keyword) || p.content.toLowerCase().includes(keyword));
+  const html = results.map(p => `<p><a href="${p.path}">${p.title}</a><br><em>${p.content}</em></p>`).join("");
+  document.getElementById("searchResults").innerHTML = html || "<p>未找到匹配结果</p>";
+});
+</script>
+"""
+
+# Helm README.md with changelog links
+helm_readme_md = """# 0379.email Helm Chart
+
+部署指南与配置说明。
+
+## 📦 版本记录
+
+完整版本变更记录请见：
+- [Changelog 页面](../../docs/changelog.html)
+- [版本对比视图](../../docs/changelog-diff.html)
+- [版本数据 JSON](../../docs/changelog.json)
+"""
+
+# CI/CD release.sh script
+release_sh = """#!/bin/bash
+echo "🔁 发布流程开始..."
+cp docs/changelog.html docs/changelog-diff.html docs/changelog.json /mnt/data/wiki/
+echo "✅ changelog 页面已推送至 Wiki"
+"""
+
+# Write files
+with open("/mnt/data/www/email/wiki/Home.md", "w", encoding="utf-8") as f:
+    f.write(wiki_home_md)
+
+with open("/mnt/data/www/email/helm/README.md", "w", encoding="utf-8") as f:
+    f.write(helm_readme_md)
+
+with open("/mnt/data/www/email/release.sh", "w", encoding="utf-8") as f:
+    f.write(release_sh)
+
+# Create ZIP package
+zip_path = "/mnt/data/0379_email_wiki_changelog_package.zip"
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+    zipf.write("/mnt/data/www/email/wiki/Home.md", "www/email/wiki/Home.md")
+    zipf.write("/mnt/data/www/email/helm/README.md", "www/email/helm/README.md")
+    zipf.write("/mnt/data/www/email/release.sh", "www/email/release.sh")
+
+print("✅ 已生成 ZIP 包：", zip_path)

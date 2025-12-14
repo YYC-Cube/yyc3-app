@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Changelog 差异对比 - 0379.email</title>
+  <style>
+    /* 基础样式 */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    /* 标题样式 */
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    h1::before {
+      content: '📊';
+      font-size: 1.2em;
+    }
+    
+    h2 {
+      color: #34495e;
+      margin-top: 30px;
+      margin-bottom: 20px;
+      border-left: 4px solid #3498db;
+      padding-left: 15px;
+    }
+    
+    /* 版本选择器样式 */
+    .selectors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 30px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    label {
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    
+    select {
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: white;
+      font-size: 16px;
+      min-width: 250px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: border-color 0.3s;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+    
+    /* 差异结果样式 */
+    #diffResult {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    
+    .change-block {
+      margin-bottom: 30px;
+    }
+    
+    .change-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    
+    .change-item {
+      padding: 10px 15px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      border-left: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+    
+    .change-item:hover {
+      transform: translateX(5px);
+    }
+    
+    /* 新增项样式 */
+    .added {
+      background-color: #e8f5e9;
+      border-left-color: #4caf50;
+    }
+    
+    .added::before {
+      content: '+ ';
+      color: #4caf50;
+      font-weight: bold;
+    }
+    
+    /* 删除项样式 */
+    .removed {
+      background-color: #ffebee;
+      border-left-color: #f44336;
+    }
+    
+    .removed::before {
+      content: '– ';
+      color: #f44336;
+      font-weight: bold;
+    }
+    
+    /* 共同项样式 */
+    .unchanged {
+      background-color: #f5f5f5;
+      border-left-color: #9e9e9e;
+      opacity: 0.7;
+    }
+    
+    .unchanged::before {
+      content: '• ';
+      color: #9e9e9e;
+    }
+    
+    /* 加载状态样式 */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+    
+    /* 错误提示样式 */
+    .error {
+      padding: 20px;
+      background-color: #ffdddd;
+      border: 1px solid #ff9999;
+      border-radius: 5px;
+      color: #d32f2f;
+      margin: 20px 0;
+    }
+    
+    /* 空状态样式 */
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+      
+      .selectors {
+        flex-direction: column;
+      }
+      
+      select {
+        width: 100%;
+        min-width: auto;
+      }
+    }
+    
+    /* 暗色模式支持 */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #1e1e1e;
+        color: #eee;
+      }
+      
+      h1 {
+        color: #e0e0e0;
+        border-bottom-color: #566473;
+      }
+      
+      h2 {
+        color: #d0d0d0;
+        border-left-color: #566473;
+      }
+      
+      label {
+        color: #e0e0e0;
+      }
+      
+      select {
+        background-color: #2d2d2d;
+        border-color: #444;
+        color: #eee;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      
+      #diffResult,
+      .selectors {
+        background-color: #2d2d2d;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      }
+      
+      .change-item.unchanged {
+        background-color: #404040;
+      }
+      
+      .loading,
+      .empty {
+        color: #b0b0b0;
+      }
+      
+      .error {
+        background-color: #4a2525;
+        border-color: #8b4513;
+      }
+    }
+    
+    /* 比较信息样式 */
+    .comparison-info {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f0f7ff;
+      border-radius: 5px;
+      border-left: 4px solid #3498db;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      .comparison-info {
+        background-color: #2c3e50;
+        border-left-color: #566473;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Changelog 差异对比</h1>
+  
+  <div class="selectors">
+    <div class="selector-group">
+      <label for="versionA">版本 A:</label>
+      <select id="versionA"></select>
+    </div>
+    <div class="selector-group">
+      <label for="versionB">版本 B:</label>
+      <select id="versionB"></select>
+    </div>
+  </div>
+  
+  <div id="diffResult">
+    <div class="loading">加载中...</div>
+  </div>
+
+  <script>
+    // 全局数据变量
+    let changelogData = [];
+    
+    /**
+     * 加载 changelog 数据
+     */
+    async function loadChangelogData() {
+      try {
+        const response = await fetch('changelog.json');
+        if (!response.ok) {
+          throw new Error(`无法加载 changelog.json: ${response.status}`);
+        }
+        changelogData = await response.json();
+        populateVersionSelectors();
+        
+        // 默认选择最新的两个版本进行对比
+        if (changelogData.length >= 2) {
+          document.getElementById('versionA').value = changelogData[1].version; // 上一个版本
+          document.getElementById('versionB').value = changelogData[0].version; // 最新版本
+          compareVersions();
+        } else if (changelogData.length === 1) {
+          document.getElementById('versionA').value = changelogData[0].version;
+          document.getElementById('versionB').value = changelogData[0].version;
+          compareVersions();
+        }
+      } catch (error) {
+        console.error('加载数据失败:', error);
+        document.getElementById('diffResult').innerHTML = `
+          <div class="error">
+            <strong>加载失败:</strong> ${error.message}<br>
+            请检查 changelog.json 文件是否存在且格式正确。
+          </div>
+        `;
+      }
+    }
+    
+    /**
+     * 填充版本选择器
+     */
+    function populateVersionSelectors() {
+      const versionA = document.getElementById('versionA');
+      const versionB = document.getElementById('versionB');
+      
+      // 清空现有选项
+      versionA.innerHTML = '';
+      versionB.innerHTML = '';
+      
+      // 添加版本选项
+      changelogData.forEach(entry => {
+        // 为版本 A 添加选项
+        const optionA = document.createElement('option');
+        optionA.value = entry.version;
+        optionA.textContent = `${entry.version} (${entry.date})`;
+        versionA.appendChild(optionA);
+        
+        // 为版本 B 添加选项
+        const optionB = document.createElement('option');
+        optionB.value = entry.version;
+        optionB.textContent = `${entry.version} (${entry.date})`;
+        versionB.appendChild(optionB);
+      });
+      
+      // 添加变更事件监听
+      versionA.addEventListener('change', compareVersions);
+      versionB.addEventListener('change', compareVersions);
+    }
+    
+    /**
+     * 比较两个版本的差异
+     */
+    function compareVersions() {
+      const versionAValue = document.getElementById('versionA').value;
+      const versionBValue = document.getElementById('versionB').value;
+      
+      if (!versionAValue || !versionBValue) {
+        document.getElementById('diffResult').innerHTML = '<div class="empty">请选择要比较的两个版本</div>';
+        return;
+      }
+      
+      // 获取两个版本的数据
+      const entryA = changelogData.find(e => e.version === versionAValue);
+      const entryB = changelogData.find(e => e.version === versionBValue);
+      
+      if (!entryA || !entryB) {
+        document.getElementById('diffResult').innerHTML = '<div class="error">未找到指定版本的数据</div>';
+        return;
+      }
+      
+      // 渲染差异结果
+      renderDiffResult(entryA, entryB);
+    }
+    
+    /**
+     * 渲染差异结果
+     */
+    function renderDiffResult(entryA, entryB) {
+      const resultContainer = document.getElementById('diffResult');
+      resultContainer.innerHTML = '';
+      
+      // 添加比较信息
+      const comparisonInfo = document.createElement('div');
+      comparisonInfo.className = 'comparison-info';
+      comparisonInfo.innerHTML = `
+        <strong>对比: ${entryA.version} (${entryA.date}) → ${entryB.version} (${entryB.date})</strong>
+      `;
+      resultContainer.appendChild(comparisonInfo);
+      
+      // 渲染中文变更差异
+      resultContainer.appendChild(createChangeSection('中文变更', entryA.changes.zh || [], entryB.changes.zh || []));
+      
+      // 渲染英文变更差异
+      resultContainer.appendChild(createChangeSection('English Changes', entryA.changes.en || [], entryB.changes.en || []));
+    }
+    
+    /**
+     * 创建变更区块
+     */
+    function createChangeSection(title, changesA, changesB) {
+      const section = document.createElement('div');
+      section.className = 'change-block';
+      
+      const sectionTitle = document.createElement('h2');
+      sectionTitle.textContent = title;
+      section.appendChild(sectionTitle);
+      
+      const changeList = document.createElement('ul');
+      changeList.className = 'change-list';
+      
+      // 计算差异
+      const setA = new Set(changesA);
+      const setB = new Set(changesB);
+      
+      // 找出新增项 (B 中有但 A 中没有的)
+      const addedItems = Array.from(setB).filter(item => !setA.has(item));
+      
+      // 找出删除项 (A 中有但 B 中没有的)
+      const removedItems = Array.from(setA).filter(item => !setB.has(item));
+      
+      // 找出共同项
+      const unchangedItems = Array.from(setA).filter(item => setB.has(item));
+      
+      // 添加新增项
+      addedItems.forEach(item => {
+        changeList.appendChild(createChangeItem(item, 'added'));
+      });
+      
+      // 添加删除项
+      removedItems.forEach(item => {
+        changeList.appendChild(createChangeItem(item, 'removed'));
+      });
+      
+      // 添加共同项
+      unchangedItems.forEach(item => {
+        changeList.appendChild(createChangeItem(item, 'unchanged'));
+      });
+      
+      // 如果没有变更
+      if (addedItems.length === 0 && removedItems.length === 0 && unchangedItems.length === 0) {
+        const emptyItem = document.createElement('li');
+        emptyItem.className = 'empty';
+        emptyItem.textContent = '无变更记录';
+        changeList.appendChild(emptyItem);
+      }
+      
+      section.appendChild(changeList);
+      return section;
+    }
+    
+    /**
+     * 创建变更项
+     */
+    function createChangeItem(text, type) {
+      const item = document.createElement('li');
+      item.className = `change-item ${type}`;
+      item.textContent = text;
+      return item;
+    }
+    
+    /**
+     * 页面加载完成后初始化
+     */
+    document.addEventListener('DOMContentLoaded', loadChangelogData);
+  </script>
+</body>
+</html>

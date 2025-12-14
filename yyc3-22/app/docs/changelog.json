@@ -1,0 +1,50 @@
+[
+  {
+    "version": "v1.3.0",
+    "date": "2025-11-02",
+    "changes": {
+      "zh": [
+        "新增 Helm Chart 模板支持",
+        "优化 TLS 证书自动挂载流程",
+        "新增 GitLab CI 自动发布脚本"
+      ],
+      "en": [
+        "Added Helm Chart template support",
+        "Improved TLS certificate auto-mounting",
+        "Added GitLab CI auto-release script"
+      ]
+    }
+  },
+  {
+    "version": "v1.2.0",
+    "date": "2025-10-15",
+    "changes": {
+      "zh": [
+        "集成 Swagger 与 Postman 接口文档",
+        "新增 Nginx HTTPS 配置模板",
+        "支持系统级 PM2 管理"
+      ],
+      "en": [
+        "Integrated Swagger and Postman API docs",
+        "Added Nginx HTTPS config templates",
+        "Enabled system-level PM2 management"
+      ]
+    }
+  },
+  {
+    "version": "v1.1.0",
+    "date": "2025-10-01",
+    "changes": {
+      "zh": [
+        "初始化 mail/api/admin/llm 四个服务模块",
+        "配置 GitHub Actions 自动发布流程",
+        "创建 changelog 页面与版本对比视图"
+      ],
+      "en": [
+        "Initialized mail/api/admin/llm service modules",
+        "Configured GitHub Actions release workflow",
+        "Created changelog page and version diff viewer"
+      ]
+    }
+  }
+]

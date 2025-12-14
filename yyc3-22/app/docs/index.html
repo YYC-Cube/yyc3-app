@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>0379.email 多服务平台架构</title>
+</head>
+<body>
+  <h1>0379.email 多服务平台架构</h1>
+
+  <h2>📦 服务子域名</h2>
+  <ul>
+    <li><strong>mail.0379.email</strong> → 邮件服务</li>
+    <li><strong>api.0379.email</strong> → API 网关</li>
+    <li><strong>admin.0379.email</strong> → 管理面板</li>
+    <li><strong>llm.0379.email</strong> → AI 推理服务</li>
+  </ul>
+
+  <h2>🧩 技术栈</h2>
+  <p>Node.js + Python + Helm + Nginx + TLS + PM2 + GitHub Actions + GitLab CI</p>
+
+  <h2>🚀 快速部署</h2>
+  <pre><code>bash ./scripts/init.sh
+bash ./scripts/release.sh</code></pre>
+
+  <h2>📘 文档入口</h2>
+  <ul>
+    <li><a href="changelog.html">Changelog 页面</a></li>
+    <li><a href="changelog-diff.html">版本对比</a></li>
+    <li><a href="helm/README.md">Helm Chart 文档</a></li>
+  </ul>
+</body>
+</html>

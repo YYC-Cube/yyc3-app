@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮件服务中心 - Email Server</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+        }
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .logo h1 {
+            margin: 0;
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+        .logo p {
+            margin: 5px 0 0 0;
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .nav-item {
+            margin-bottom: 10px;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            opacity: 0.9;
+        }
+        .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+            opacity: 1;
+            transform: translateX(5px);
+        }
+        .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            font-weight: 600;
+            opacity: 1;
+        }
+        .nav-icon {
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .header-left h2 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #1e40af;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            background-color: #f1f5f9;
+            border-radius: 8px;
+            padding: 8px 15px;
+        }
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #3b82f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: 600;
+        }
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .user-email {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .content-tabs {
+            display: flex;
+            background-color: white;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #6b7280;
+        }
+        .tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+            background-color: #eff6ff;
+        }
+        .mail-container {
+            display: flex;
+            background-color: white;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .mail-filters {
+            width: 250px;
+            border-right: 1px solid #e5e7eb;
+            padding: 20px;
+        }
+        .filter-section {
+            margin-bottom: 25px;
+        }
+        .filter-section h3 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .filter-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .filter-item {
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filter-item:hover {
+            background-color: #f3f4f6;
+        }
+        .filter-item.active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .filter-count {
+            background-color: #e5e7eb;
+            color: #374151;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .filter-item.active .filter-count {
+            background-color: #2563eb;
+            color: white;
+        }
+        .compose-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-bottom: 20px;
+        }
+        .compose-btn:hover {
+            transform: translateY(-2px);
+        }
+        .mail-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .mail-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .mail-header input {
+            width: 15px;
+            height: 15px;
+        }
+        .mail-header-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: 10px;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .action-btn:hover {
+            background-color: #f3f4f6;
+        }
+        .mail-items {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .mail-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        .mail-item:hover {
+            background-color: #f9fafb;
+        }
+        .mail-item.unread {
+            background-color: #f8fafc;
+            font-weight: 600;
+        }
+        .mail-checkbox {
+            margin-right: 15px;
+        }
+        .mail-star {
+            margin-right: 15px;
+            color: #9ca3af;
+        }
+        .mail-star.starred {
+            color: #f59e0b;
+        }
+        .mail-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        .mail-sender {
+            min-width: 150px;
+            margin-right: 15px;
+        }
+        .mail-subject {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .mail-preview {
+            color: #6b7280;
+            margin: 0 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            display: none;
+        }
+        .mail-time {
+            color: #6b7280;
+            font-size: 13px;
+            min-width: 60px;
+            text-align: right;
+        }
+        .mail-view {
+            flex: 1;
+            border-left: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        .mail-view-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .mail-view-subject {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin: 0 0 15px 0;
+            color: #1e40af;
+        }
+        .mail-view-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .mail-view-from {
+            font-weight: 600;
+        }
+        .mail-view-date {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .mail-view-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .mail-view-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .mail-view-footer {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+        }
+        .reply-btn, .forward-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .reply-btn {
+            background-color: #2563eb;
+            color: white;
+        }
+        .reply-btn:hover {
+            background-color: #1d4ed8;
+        }
+        .forward-btn {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .forward-btn:hover {
+            background-color: #e5e7eb;
+        }
+        @media (max-width: 1200px) {
+            .mail-preview {
+                display: none;
+            }
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 10px;
+            }
+            .mail-container {
+                flex-direction: column;
+            }
+            .mail-filters {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+                padding: 15px;
+            }
+            .mail-sender {
+                min-width: 100px;
+            }
+            .mail-view {
+                border-left: none;
+                border-top: 1px solid #e5e7eb;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>📧 MailHub</h1>
+                <p>云服务器yyc3-121</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <span class="nav-icon">🏠</span>
+                        收件箱
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">✉️</span>
+                        已发送
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">📝</span>
+                        草稿
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">🗑️</span>
+                        已删除
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">⭐</span>
+                        星标邮件
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">⚠️</span>
+                        垃圾邮件
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <h2>邮件服务中心</h2>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" placeholder="搜索邮件...">
+                    </div>
+                    <div class="user-profile">
+                        <div class="user-avatar">YS</div>
+                        <div class="user-info">
+                            <div class="user-name">云服务器</div>
+                            <div class="user-email">service@yyc3-121.com</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-tabs">
+                <div class="tab active">收件箱</div>
+                <div class="tab">未读</div>
+                <div class="tab">重要</div>
+                <div class="tab">已标记</div>
+            </div>
+
+            <div class="mail-container">
+                <div class="mail-filters">
+                    <button class="compose-btn">📝 写邮件</button>
+                    
+                    <div class="filter-section">
+                        <h3>分类</h3>
+                        <ul class="filter-list">
+                            <li class="filter-item active">
+                                所有邮件
+                                <span class="filter-count">25</span>
+                            </li>
+                            <li class="filter-item">
+                                工作
+                                <span class="filter-count">12</span>
+                            </li>
+                            <li class="filter-item">
+                                个人
+                                <span class="filter-count">8</span>
+                            </li>
+                            <li class="filter-item">
+                                通知
+                                <span class="filter-count">5</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="filter-section">
+                        <h3>标签</h3>
+                        <ul class="filter-list">
+                            <li class="filter-item">
+                                重要
+                                <span class="filter-count">3</span>
+                            </li>
+                            <li class="filter-item">
+                                跟进
+                                <span class="filter-count">2</span>
+                            </li>
+                            <li class="filter-item">
+                                参考
+                                <span class="filter-count">6</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mail-list">
+                    <div class="mail-header">
+                        <input type="checkbox">
+                        <div class="mail-header-actions">
+                            <button class="action-btn">📌</button>
+                            <button class="action-btn">🗑️</button>
+                            <button class="action-btn">🔄</button>
+                            <button class="action-btn">⏱️</button>
+                        </div>
+                    </div>
+
+                    <div class="mail-items">
+                        <div class="mail-item unread">
+                            <input type="checkbox" class="mail-checkbox">
+                            <span class="mail-star">☆</span>
+                            <div class="mail-content">
+                                <div class="mail-sender">系统管理员</div>
+                                <div class="mail-subject">服务器维护通知</div>
+                                <div class="mail-preview">尊敬的用户，我们将于本周六凌晨2:00-4:00进行系统维护...</div>
+                            </div>
+                            <div class="mail-time">10:30</div>
+                        </div>
+
+                        <div class="mail-item unread">
+                            <input type="checkbox" class="mail-checkbox">
+                            <span class="mail-star">☆</span>
+                            <div class="mail-content">
+                                <div class="mail-sender">客户支持</div>
+                                <div class="mail-subject">您的问题已解决</div>
+                                <div class="mail-preview">您好，关于您反馈的邮件发送问题，我们已经...</div>
+                            </div>
+                            <div class="mail-time">昨天</div>
+                        </div>
+
+                        <div class="mail-item">
+                            <input type="checkbox" class="mail-checkbox">
+                            <span class="mail-star starred">★</span>
+                            <div class="mail-content">
+                                <div class="mail-sender">技术团队</div>
+                                <div class="mail-subject">新功能上线公告</div>
+                                <div class="mail-preview">我们很高兴地宣布，邮件系统的新功能已经上线...</div>
+                            </div>
+                            <div class="mail-time">周一</div>
+                        </div>
+
+                        <div class="mail-item">
+                            <input type="checkbox" class="mail-checkbox">
+                            <span class="mail-star">☆</span>
+                            <div class="mail-content">
+                                <div class="mail-sender">市场部</div>
+                                <div class="mail-subject">新产品发布通知</div>
+                                <div class="mail-preview">您好，我们的新产品将于下周正式发布...</div>
+                            </div>
+                            <div class="mail-time">上周五</div>
+                        </div>
+
+                        <div class="mail-item">
+                            <input type="checkbox" class="mail-checkbox">
+                            <span class="mail-star">☆</span>
+                            <div class="mail-content">
+                                <div class="mail-sender">安全中心</div>
+                                <div class="mail-subject">安全提醒：请更新密码</div>
+                                <div class="mail-preview">为了保障您的账户安全，建议您每90天更换一次密码...</div>
+                            </div>
+                            <div class="mail-time">10/10</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mail-view">
+                    <div class="mail-view-header">
+                        <h2 class="mail-view-subject">服务器维护通知</h2>
+                        <div class="mail-view-meta">
+                            <span class="mail-view-from">发件人：系统管理员 &lt;admin@yyc3-121.com&gt;</span>
+                            <span class="mail-view-date">2024-10-15 10:30</span>
+                        </div>
+                    </div>
+
+                    <div class="mail-view-body">
+                        <p>尊敬的用户：</p>
+                        <p>您好！感谢您使用云服务器yyc3-121的邮件服务。</p>
+                        <p>为了提供更稳定、更高效的服务，我们将于以下时间进行系统维护：</p>
+                        <ul>
+                            <li><strong>维护时间：</strong>2024年10月19日（周六）凌晨2:00-4:00</li>
+                            <li><strong>影响范围：</strong>邮件发送、接收服务可能出现短暂中断</li>
+                            <li><strong>维护内容：</strong>服务器升级、安全补丁更新、性能优化</li>
+                        </ul>
+                        <p>在此期间，您可能无法正常发送或接收邮件。建议您提前做好相关安排，重要邮件请提前处理或备份。</p>
+                        <p>维护完成后，系统将恢复正常运行。我们将努力缩短维护时间，减少对您的影响。</p>
+                        <p>如有任何疑问，请联系客服支持。</p>
+                        <p>感谢您的理解与支持！</p>
+                        <p>此致<br>
+                        云服务器yyc3-121技术团队</p>
+                    </div>
+
+                    <div class="mail-view-footer">
+                        <button class="reply-btn">↩️ 回复</button>
+                        <button class="forward-btn">➡️ 转发</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 这里可以添加实际的邮件操作功能
+        document.querySelector('.compose-btn').addEventListener('click', function() {
+            alert('写邮件功能将在未来版本中实现');
+        });
+
+        // 模拟邮件项点击
+        const mailItems = document.querySelectorAll('.mail-item');
+        mailItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // 移除所有未读状态
+                mailItems.forEach(i => i.classList.remove('unread'));
+                // 添加当前项为未读
+                this.classList.add('unread');
+            });
+        });
+
+        // 模拟星标功能
+        const stars = document.querySelectorAll('.mail-star');
+        stars.forEach(star => {
+            star.addEventListener('click', function(e) {
+                e.stopPropagation(); // 阻止冒泡，避免触发邮件项点击
+                this.classList.toggle('starred');
+                if (this.classList.contains('starred')) {
+                    this.textContent = '★';
+                } else {
+                    this.textContent = '☆';
+                }
+            });
+        });
+
+        // 模拟标签切换
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 模拟过滤器切换
+        const filterItems = document.querySelectorAll('.filter-item');
+        filterItems.forEach(item => {
+            item.addEventListener('click', function() {
+                filterItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

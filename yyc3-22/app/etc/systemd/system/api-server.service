@@ -1,0 +1,16 @@
+[Unit]
+Description=API Server (api.0379.email)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/ww/app/api
+ExecStart=/usr/bin/pm2 start /ww/app/ecosystem.config.js --only api-server
+ExecReload=/usr/bin/pm2 restart api-server
+ExecStop=/usr/bin/pm2 stop api-server
+Restart=always
+Environment=PM2_HOME=/root/.pm2
+
+[Install]
+WantedBy=multi-user.target

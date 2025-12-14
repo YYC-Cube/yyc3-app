@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # API服务 - 蓝色环境
+  api-blue:
+    image: ${DOCKER_IMAGE:-yyc3-api}:${TAG:-latest}
+    container_name: yyc3-api-blue
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      - LOG_LEVEL=info
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - logs-blue:/app/logs
+
+  # Admin服务 - 蓝色环境
+  admin-blue:
+    image: ${DOCKER_IMAGE:-yyc3-admin}:${TAG:-latest}
+    container_name: yyc3-admin-blue
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - API_URL=http://api-blue:3000
+      - LOG_LEVEL=info
+    ports:
+      - "3001:3001"
+    depends_on:
+      - api-blue
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - logs-blue:/app/logs
+
+  # 数据库服务
+  db:
+    image: postgres:15-alpine
+    container_name: yyc3-db
+    environment:
+      - POSTGRES_USER=${DB_USER:-admin}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
+      - POSTGRES_DB=${DB_NAME:-yyc3_db}
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
+  # Redis服务
+  redis:
+    image: redis:7-alpine
+    container_name: yyc3-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+  # RabbitMQ服务
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: yyc3-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-admin}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-password}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
+  logs-blue:

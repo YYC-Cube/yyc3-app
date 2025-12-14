@@ -1,0 +1,104 @@
+global:
+  domain: 0379.email
+  imagePullSecrets: []
+  storageClass: "standard"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+services:
+  api:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: your-registry/email-api
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    service:
+      port: 3000
+      targetPort: 3000
+    ingress:
+      host: api.0379.email
+    env:
+      NODE_ENV: production
+      SERVICE_NAME: api.0379.email
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+  admin:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: your-registry/email-admin
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    service:
+      port: 3001
+      targetPort: 3001
+    ingress:
+      host: admin.0379.email
+    env:
+      NODE_ENV: production
+      SERVICE_NAME: admin.0379.email
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "50m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+
+  llm:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: your-registry/email-llm
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    service:
+      port: 3002
+      targetPort: 3002
+    ingress:
+      host: llm.0379.email
+    env:
+      NODE_ENV: production
+      SERVICE_NAME: llm.0379.email
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "200m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+  mail:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: your-registry/email-mail
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    service:
+      port: 3003
+      targetPort: 3003
+    ingress:
+      host: mail.0379.email
+    env:
+      NODE_ENV: production
+      SERVICE_NAME: mail.0379.email
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "300m"

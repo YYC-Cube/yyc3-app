@@ -1,0 +1,52 @@
+[common]
+server_addr = "8.152.195.33"
+server_port = 7001
+token = "yyc3_nas"
+user = "nas_client"
+admin_addr = "127.0.0.1"
+admin_port = 7400
+admin_user = "yyc3"
+admin_pwd = "my151001"
+log_file = "/Volumes/www/frpc/logs/frpc.log"
+log_level = "info"
+log_max_days = 7
+tcp_mux = true
+heartbeat_timeout = 60
+heartbeat_interval = 30
+tls_enable = true
+
+[api-0379]
+type = "tcp"
+local_ip = "192.168.3.45"
+local_port = 6600
+remote_port = 5001
+
+[llm-0379]
+type = "tcp"
+local_ip = "192.168.3.45"
+local_port = 6602
+remote_port = 5002
+
+[admin-0379]
+type = "tcp"
+local_ip = "192.168.3.45"
+local_port = 6601
+remote_port = 5003
+
+[mail-0379]
+type = "tcp"
+local_ip = "192.168.3.45"
+local_port = 6603
+remote_port = 5004
+
+[nas-0379]
+type = "tcp"
+local_ip = "192.168.3.45"
+local_port = 8181
+remote_port = 5005
+
+[monitor-0379]
+type = "tcp"
+local_ip = "192.168.3.45"
+local_port = 3002
+remote_port = 5006

@@ -1,0 +1,90 @@
+# Generating Helm Chart files and CI/CD deployment scripts for /www/email project
+
+import os
+
+# Create directories
+helm_dir = "/mnt/data/www/email/helm"
+os.makedirs(helm_dir, exist_ok=True)
+
+# 1. Generate .helmignore file
+helmignore_content = """node_modules
+.git
+*.tgz
+*.zip
+*.log
+*.env
+"""
+helmignore_path = os.path.join(helm_dir, ".helmignore")
+with open(helmignore_path, "w") as f:
+    f.write(helmignore_content)
+
+# 2. Generate push-helm.sh script
+push_script_content = """#!/bin/bash
+# Push Helm chart to remote repository
+
+CHART_NAME="email-services"
+CHART_VERSION="1.0.0"
+CHART_FILE="${CHART_NAME}-${CHART_VERSION}.tgz"
+REMOTE_REPO_URL="https://your-helm-repo.example.com"
+
+# Method 1: Using curl (for GitHub Pages or raw HTTP)
+curl --data-binary "@${CHART_FILE}" ${REMOTE_REPO_URL}/${CHART_FILE}
+
+# Optional: Update index.yaml if using GitHub Pages
+helm repo index . --url ${REMOTE_REPO_URL}
+
+# Method 2: Using helm plugin push (if installed)
+# helm push ${CHART_FILE} oci://your-oci-repo.example.com
+"""
+push_script_path = "/mnt/data/www/email/push-helm.sh"
+os.makedirs(os.path.dirname(push_script_path), exist_ok=True)
+with open(push_script_path, "w") as f:
+    f.write(push_script_content)
+os.chmod(push_script_path, 0o755)
+
+# 3. Generate GitHub Actions deploy.yml
+github_actions_content = """name: Deploy Helm Chart
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+
+      - name: Deploy to Kubernetes
+        run: |
+          helm upgrade --install email-services ./email-services-1.0.0.tgz \\
+            --namespace email --create-namespace
+"""
+github_actions_path = "/mnt/data/www/email/.github/workflows/deploy.yml"
+os.makedirs(os.path.dirname(github_actions_path), exist_ok=True)
+with open(github_actions_path, "w") as f:
+    f.write(github_actions_content)
+
+# 4. Generate GitLab CI deploy stage
+gitlab_ci_content = """deploy:
+  stage: deploy
+  script:
+    - helm upgrade --install email-services ./email-services-1.0.0.tgz --namespace email --create-namespace
+  only:
+    - main
+"""
+gitlab_ci_path = "/mnt/data/www/email/.gitlab-ci.yml"
+with open(gitlab_ci_path, "w") as f:
+    f.write(gitlab_ci_content)
+
+# Output file paths
+print("Generated files:")
+print(".helmignore →", helmignore_path)
+print("push-helm.sh →", push_script_path)
+print("GitHub Actions →", github_actions_path)
+print("GitLab CI →", gitlab_ci_path)

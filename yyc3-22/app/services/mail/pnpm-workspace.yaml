@@ -1,0 +1,4 @@
+# 🎯 YYC³ 标准 pnpm 工作区配置
+
+packages:
+  - 'packages/*'

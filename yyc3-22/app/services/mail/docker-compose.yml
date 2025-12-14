@@ -1,0 +1,92 @@
+# 🚀 邮件平台多容器应用配置
+# @file docker-compose.yml
+# @description 管理API服务、数据库和缓存的Docker Compose配置
+# @author YYC
+# @version 1.0.0
+# @created 2024-10-15
+
+version: '3.8'
+
+services:
+  # API服务
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    container_name: email-platform-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./api/src:/app/src:ro
+      - api-node-modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/email_platform
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=your-secret-key-change-in-production
+    depends_on:
+      - db
+      - redis
+    networks:
+      - email-platform-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL数据库
+  db:
+    image: postgres:15-alpine
+    container_name: email-platform-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=email_platform
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    networks:
+      - email-platform-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: email-platform-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - email-platform-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres-data:
+    name: email-platform-postgres-data
+  redis-data:
+    name: email-platform-redis-data
+  api-node-modules:
+    name: email-platform-api-node-modules
+
+networks:
+  email-platform-network:
+    name: email-platform-network
+    driver: bridge

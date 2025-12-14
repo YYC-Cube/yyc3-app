@@ -1,0 +1,186 @@
+# Promtail配置文件
+# 版本：1.0.0
+# 创建日期：2024-01-15
+
+# 服务器配置
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+# 客户端配置（指向Loki服务）
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    batchwait: 1s
+    batchsize: 102400  # 100KB
+    timeout: 10s
+    backoff_config:
+      min_period: 500ms
+      max_period: 5s
+      max_retries: 10
+
+# 位置配置
+positions:
+  filename: /tmp/positions.yaml
+  sync_period: 10s
+
+# 抓取配置
+snippets:
+  common_labels:
+    job: yyc3-logs
+
+# 抓取配置
+scrape_configs:
+  # Redis API服务日志
+  - job_name: redis-api-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          __path__: /var/log/yyc3/redis-api/*.log
+          service: redis-api
+          environment: production
+          {{- with $labels.service}}
+          job: {{ $labels.service }}-logs
+          {{- end}}
+    pipeline_stages:
+      - match:
+          selector: '{service="redis-api"}'
+          stages:
+            - regex:
+                expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<level>\w+) \[(?P<logger>[\w.]+)\] (?P<message>.*)$'
+            - labels:
+                level: level
+                logger: logger
+            - timestamp:
+                source: timestamp
+                format: "2006-01-02 15:04:05,000"
+
+  # Mail服务日志
+  - job_name: mail-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          __path__: /var/log/yyc3/mail/*.log
+          service: mail
+          environment: production
+    pipeline_stages:
+      - match:
+          selector: '{service="mail"}'
+          stages:
+            - regex:
+                expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<level>\w+) \[(?P<logger>[\w.]+)\] (?P<message>.*)$'
+            - labels:
+                level: level
+                logger: logger
+            - timestamp:
+                source: timestamp
+                format: "2006-01-02 15:04:05,000"
+
+  # API服务日志
+  - job_name: api-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          __path__: /var/log/yyc3/api/*.log
+          service: api
+          environment: production
+    pipeline_stages:
+      - match:
+          selector: '{service="api"}'
+          stages:
+            - regex:
+                expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<level>\w+) \[(?P<logger>[\w.]+)\] (?P<message>.*)$'
+            - labels:
+                level: level
+                logger: logger
+            - timestamp:
+                source: timestamp
+                format: "2006-01-02 15:04:05,000"
+
+  # Admin服务日志
+  - job_name: admin-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          __path__: /var/log/yyc3/admin/*.log
+          service: admin
+          environment: production
+    pipeline_stages:
+      - match:
+          selector: '{service="admin"}'
+          stages:
+            - regex:
+                expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<level>\w+) \[(?P<logger>[\w.]+)\] (?P<message>.*)$'
+            - labels:
+                level: level
+                logger: logger
+            - timestamp:
+                source: timestamp
+                format: "2006-01-02 15:04:05,000"
+
+  # LLM服务日志
+  - job_name: llm-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          __path__: /var/log/yyc3/llm/*.log
+          service: llm
+          environment: production
+    pipeline_stages:
+      - match:
+          selector: '{service="llm"}'
+          stages:
+            - regex:
+                expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<level>\w+) \[(?P<logger>[\w.]+)\] (?P<message>.*)$'
+            - labels:
+                level: level
+                logger: logger
+            - timestamp:
+                source: timestamp
+                format: "2006-01-02 15:04:05,000"
+
+  # 系统日志（可选）
+  - job_name: system-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          __path__: /var/log/nginx/access.log
+          service: nginx
+          log_type: access
+          environment: production
+      - targets:
+          - localhost
+        labels:
+          __path__: /var/log/nginx/error.log
+          service: nginx
+          log_type: error
+          environment: production
+    pipeline_stages:
+      - match:
+          selector: '{service="nginx",log_type="access"}'
+          stages:
+            - regex:
+                expression: '^(?P<remote_addr>\S+) - (?P<remote_user>\S+) \[(?P<time_local>[\w:/]+\s[+\-]\d{4})\] "(?P<request>[^"]*)" (?P<status>\d+) (?P<body_bytes_sent>\d+) "(?P<http_referer>[^"]*)" "(?P<http_user_agent>[^"]*)"$'
+            - labels:
+                status: status
+                remote_addr: remote_addr
+            - timestamp:
+                source: time_local
+                format: "02/Jan/2006:15:04:05 -0700"
+      - match:
+          selector: '{service="nginx",log_type="error"}'
+          stages:
+            - regex:
+                expression: '^(?P<timestamp>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?P<level>\w+)\] (?P<pid>\d+)#(?P<tid>\d+): (?P<message>.*)$'
+            - labels:
+                level: level
+                pid: pid
+                tid: tid
+            - timestamp:
+                source: timestamp
+                format: "2006/01/02 15:04:05"

@@ -1,0 +1,30 @@
+# prometheus/alerts.yml
+groups:
+- name: email-services
+  rules:
+  - alert: APIHealthCheckFailed
+    expr: up{job="api-service"} == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "API service is down"
+      description: "API service has been down for more than 2 minutes"
+
+  - alert: HighMemoryUsage
+    expr: process_resident_memory_bytes{job="api-service"} > 500 * 1024 * 1024
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High memory usage detected"
+      description: "API service memory usage is above 500MB"
+
+  - alert: DatabaseConnectionFailed
+    expr: health_check_database_healthy{service="api"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Database connection failed"
+      description: "API service cannot connect to the database"

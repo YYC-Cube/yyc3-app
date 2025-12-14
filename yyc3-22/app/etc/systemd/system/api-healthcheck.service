@@ -1,0 +1,12 @@
+[Unit]
+Description=Healthcheck for api-server
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/env bash /Users/yanyu/0379.email/healthcheck/ping.sh api 3000
+User=yanyu
+Group=staff
+
+[Install]
+WantedBy=multi-user.target

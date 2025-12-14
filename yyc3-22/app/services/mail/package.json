@@ -1,0 +1,56 @@
+{
+  "name": "yyc3-email-platform",
+  "version": "2.0.0",
+  "description": "YYC³ 企业级邮件服务平台 - 基于现代微服务架构的邮件发送、接收、管理和智能分析平台",
+  "author": "YYC³ <admin@0379.email>",
+  "license": "MIT",
+  "homepage": "https://0379.email",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YY-Nexus/0379-email-platform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YY-Nexus/0379-email-platform/issues"
+  },
+  "keywords": [
+    "yyc3",
+    "email",
+    "email-platform",
+    "enterprise-email",
+    "microservices",
+    "ai",
+    "llm"
+  ],
+  "workspaces": [
+    "packages/web",
+    "packages/api"
+  ],
+  "scripts": {
+    "install:all": "pnpm install && pnpm -r install",
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "db:migrate": "pnpm -F api db:migrate",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "pnpm": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.md": [
+      "prettier --write"
+    ]
+  }
+}

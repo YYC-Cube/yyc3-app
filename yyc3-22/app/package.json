@@ -1,0 +1,59 @@
+{
+  "name": "email",
+  "version": "1.0.0",
+  "description": "0379.email 服务项目",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write '**/*.{ts,tsx,js,jsx,json,css,md}'",
+    "format:check": "prettier --check '**/*.{ts,tsx,js,jsx,json,css,md}'",
+    "standardize": "bash .github/scripts/standardization-check.sh",
+    "standardization:fix": "bash .github/scripts/standardization-check.sh --fix",
+    "health:check": "bash .github/scripts/health-check.sh",
+    "prepare": "husky install",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "build": "tsc",
+    "ci:setup": "bash .github/scripts/setup-environment.sh setup ci",
+    "ci:lint": "npm run lint && npm run format:check",
+    "ci:test": "npm run test:coverage -- --ci",
+    "ci:build": "npm run build",
+    "ci:security": "npm audit --audit-level=high",
+    "ci:standardize": "bash .github/scripts/standardization-check.sh",
+    "build:staging": "NODE_ENV=staging npm run build",
+    "build:production": "NODE_ENV=production npm run build",
+    "deploy:staging": "bash scripts/deploy.sh staging",
+    "deploy:production": "bash scripts/deploy.sh production",
+    "deploy:rollback": "bash scripts/deploy.sh rollback",
+    "precommit": "lint-staged",
+    "release:version": "node -e \"console.log('v' + new Date().toISOString().split('T')[0].replace(/-/g, '.') + '-' + new Date().toTimeString().slice(0,5).replace(/:/g, '.'))\""
+  },
+  "keywords": [
+    "email",
+    "service",
+    "0379.email"
+  ],
+  "author": "YYC",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react": "^7.33.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.3",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  }
+}

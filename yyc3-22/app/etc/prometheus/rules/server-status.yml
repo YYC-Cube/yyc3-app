@@ -1,0 +1,228 @@
+# === 服务器状态监控规则 ===
+# 作者: YYC
+# 版本: 1.0.0
+# 创建时间: 2024-10-15
+# 描述: 监控服务器和应用的健康状态
+
+groups:
+  - name: server-status
+    rules:
+      # CPU使用率告警
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高CPU使用率告警 ({{ $labels.instance }})"
+          description: "CPU使用率超过80%已持续5分钟，当前值: {{ $value | printf "%.2f" }}%"
+
+      # 内存使用率告警
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高内存使用率告警 ({{ $labels.instance }})"
+          description: "内存使用率超过85%已持续5分钟，当前值: {{ $value | printf "%.2f" }}%"
+
+      # 磁盘使用率告警
+      - alert: HighDiskUsage
+        expr: 100 - (node_filesystem_avail_bytes{mountpoint="/",fstype!="tmpfs"} / node_filesystem_size_bytes{mountpoint="/",fstype!="tmpfs"} * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高磁盘使用率告警 ({{ $labels.instance }})"
+          description: "磁盘使用率超过85%已持续5分钟，当前值: {{ $value | printf "%.2f" }}%"
+
+      # 网络流量告警
+      - alert: HighNetworkTraffic
+        expr: sum by(instance) (irate(node_network_receive_bytes_total[5m])) / 1024 / 1024 > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高网络流量告警 ({{ $labels.instance }})"
+          description: "网络接收流量超过100MB/s已持续5分钟，当前值: {{ $value | printf "%.2f" }} MB/s"
+
+      # 进程数量告警
+      - alert: HighProcessCount
+        expr: node_procs_running > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高进程数量告警 ({{ $labels.instance }})"
+          description: "运行中进程数量超过100个已持续5分钟，当前值: {{ $value }}"
+
+      # 文件描述符使用率告警
+      - alert: HighFileDescriptors
+        expr: node_filefd_allocated / node_filefd_maximum * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高文件描述符使用率告警 ({{ $labels.instance }})"
+          description: "文件描述符使用率超过85%已持续5分钟，当前值: {{ $value | printf "%.2f" }}%"
+
+      # 系统负载告警
+      - alert: HighSystemLoad
+        expr: node_load5 > 4
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高系统负载告警 ({{ $labels.instance }})"
+          description: "系统5分钟负载超过4已持续5分钟，当前值: {{ $value | printf "%.2f" }}"
+
+      # 交换分区使用率告警
+      - alert: HighSwapUsage
+        expr: (node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) / node_memory_SwapTotal_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高交换分区使用率告警 ({{ $labels.instance }})"
+          description: "交换分区使用率超过80%已持续5分钟，当前值: {{ $value | printf "%.2f" }}%"
+
+      # I/O等待时间告警
+      - alert: HighIOWait
+        expr: (sum by(instance) (irate(node_cpu_seconds_total{mode="iowait"}[5m]))) * 100 > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高I/O等待时间告警 ({{ $labels.instance }})"
+          description: "I/O等待时间超过30%已持续5分钟，当前值: {{ $value | printf "%.2f" }}%"
+
+      # 应用服务不可用告警
+      - alert: ServiceUnavailable
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "服务不可用告警 ({{ $labels.instance }})"
+          description: "服务已停止响应超过2分钟，当前状态: {{ $value }}"
+
+      # 应用服务重启告警
+      - alert: ServiceRestarted
+        expr: changes(process_start_time_seconds[10m]) > 0
+        for: 1m
+        labels:
+          severity: info
+        annotations:
+          summary: "服务重启告警 ({{ $labels.instance }})"
+          description: "服务在过去10分钟内重启过，当前值: {{ $value }}"
+
+      # HTTP请求错误率告警
+      - alert: HighHTTPErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高HTTP错误率告警 ({{ $labels.instance }})"
+          description: "HTTP请求错误率超过5%已持续5分钟，当前值: {{ $value | printf "%.2f" }}%"
+
+      # HTTP请求延迟告警
+      - alert: HighHTTPRequestLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, instance)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高HTTP请求延迟告警 ({{ $labels.instance }})"
+          description: "95%的HTTP请求延迟超过2秒已持续5分钟，当前值: {{ $value | printf "%.2f" }}s"
+
+      # 数据库连接数告警
+      - alert: HighDatabaseConnections
+        expr: pg_stat_activity_count > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高数据库连接数告警 ({{ $labels.instance }})"
+          description: "数据库连接数超过100已持续5分钟，当前值: {{ $value }}"
+
+      # Redis连接数告警
+      - alert: HighRedisConnections
+        expr: redis_connected_clients > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高Redis连接数告警 ({{ $labels.instance }})"
+          description: "Redis连接数超过100已持续5分钟，当前值: {{ $value }}"
+
+      # 消息队列堆积告警
+      - alert: MessageQueueBacklog
+        expr: rabbitmq_queue_messages > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "消息队列堆积告警 ({{ $labels.instance }})"
+          description: "消息队列堆积超过1000条已持续5分钟，当前值: {{ $value }}"
+
+      # 内存泄漏检测
+      - alert: MemoryLeak
+        expr: increase(node_memory_MemRSS_bytes[1h]) > 0
+        for: 2h
+        labels:
+          severity: warning
+        annotations:
+          summary: "内存泄漏检测告警 ({{ $labels.instance }})"
+          description: "内存使用量持续增长超过2小时，当前增长值: {{ $value | printf "%.2f" }} bytes/hour"
+
+      # 系统温度告警
+      - alert: HighSystemTemperature
+        expr: node_hwmon_temp_celsius > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高系统温度告警 ({{ $labels.instance }})"
+          description: "系统温度超过80℃已持续5分钟，当前值: {{ $value | printf "%.2f" }}℃"
+
+      # 网络连接数告警
+      - alert: HighNetworkConnections
+        expr: node_netstat_Tcp_CurrEstab > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高网络连接数告警 ({{ $labels.instance }})"
+          description: "网络连接数超过1000已持续5分钟，当前值: {{ $value }}"
+
+      # 磁盘I/O速率告警
+      - alert: HighDiskIORate
+        expr: sum by(instance) (irate(node_disk_written_bytes_total[5m])) / 1024 / 1024 > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高磁盘I/O速率告警 ({{ $labels.instance }})"
+          description: "磁盘写入速率超过100MB/s已持续5分钟，当前值: {{ $value | printf "%.2f" }} MB/s"
+
+      # 网络丢包率告警
+      - alert: HighNetworkPacketLoss
+        expr: (sum(rate(node_network_receive_packets_dropped_total[5m])) / sum(rate(node_network_receive_packets_total[5m]))) * 100 > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高网络丢包率告警 ({{ $labels.instance }})"
+          description: "网络丢包率超过1%已持续5分钟，当前值: {{ $value | printf "%.2f" }}%"
+
+      # 网络错误率告警
+      - alert: HighNetworkErrorRate
+        expr: (sum(rate(node_network_receive_errs_total[5m])) / sum(rate(node_network_receive_packets_total[5m]))) * 100 > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高网络错误率告警 ({{ $labels.instance }})"
+          description: "网络错误率超过0.1%已持续5分钟，当前值: {{ $value | printf "%.2f" }}%"

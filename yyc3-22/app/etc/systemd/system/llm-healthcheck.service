@@ -1,0 +1,12 @@
+[Unit]
+Description=Healthcheck for llm-server
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/env bash /Users/yanyu/0379.email/healthcheck/ping.sh llm 3002
+User=yanyu
+Group=staff
+
+[Install]
+WantedBy=multi-user.target

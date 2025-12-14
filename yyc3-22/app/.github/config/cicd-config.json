@@ -1,0 +1,73 @@
+{
+  "ci": {
+    "node_version": "20",
+    "npm_version": "latest",
+    "timeout_minutes": 30,
+    "concurrency": 2,
+    "fail_fast": true,
+    "required_checks": [
+      "lint",
+      "format",
+      "test",
+      "build",
+      "security",
+      "standardization"
+    ]
+  },
+  "cd": {
+    "environments": [
+      {
+        "name": "staging",
+        "api_endpoint": "https://api-staging.0379.email",
+        "deploy_timeout_minutes": 20,
+        "health_check_retries": 5,
+        "health_check_interval_seconds": 30
+      },
+      {
+        "name": "production",
+        "api_endpoint": "https://api.0379.email",
+        "deploy_timeout_minutes": 30,
+        "health_check_retries": 10,
+        "health_check_interval_seconds": 20,
+        "rollback_on_failure": true
+      }
+    ],
+    "deployment_strategy": "blue-green",
+    "keep_versions": 5,
+    "notification_channels": ["email", "slack"]
+  },
+  "standardization": {
+    "max_file_size_kb": 512,
+    "max_line_length": 100,
+    "required_directories": [
+      "src",
+      "tests",
+      "scripts",
+      ".github"
+    ],
+    "required_files": [
+      "README.md",
+      "LICENSE",
+      "package.json",
+      "tsconfig.json",
+      ".eslintrc.js",
+      ".prettierrc"
+    ]
+  },
+  "health_check": {
+    "memory_threshold_percent": 85,
+    "cpu_threshold_percent": 90,
+    "disk_threshold_percent": 90,
+    "response_time_threshold_ms": 500,
+    "error_rate_threshold_percent": 1,
+    "log_file_max_size_mb": 100,
+    "log_file_retention_days": 7
+  },
+  "security": {
+    "audit_level": "high",
+    "allowed_dependencies": [],
+    "blocked_dependencies": [],
+    "check_secrets": true,
+    "check_permissions": true
+  }
+}

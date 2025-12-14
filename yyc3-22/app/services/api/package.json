@@ -1,0 +1,44 @@
+{
+  "name": "0379-email-api",
+  "version": "1.0.0",
+  "description": "0379.email API Service",
+  "main": "simple-server.js",
+  "scripts": {
+    "start": "node simple-server.js",
+    "dev": "nodemon simple-server.js",
+    "test": "jest",
+    "build": "echo 'API build completed'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.3.1",
+    "mysql2": "^3.6.5",
+    "redis": "^4.6.10",
+    "jsonwebtoken": "^9.0.3",
+    "bcryptjs": "^2.4.3",
+    "validator": "^13.11.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7",
+    "express-rate-limit": "^7.1.5",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "api",
+    "0379.email",
+    "express",
+    "nodejs"
+  ],
+  "author": "0379.email Team",
+  "license": "MIT"
+}

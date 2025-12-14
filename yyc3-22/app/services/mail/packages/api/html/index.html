@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API接口文档 - Email Server</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        header {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        .main-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .api-section {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .api-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        h2 {
+            color: #2563eb;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        h3 {
+            color: #1e40af;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .endpoint-card {
+            background: #f8fafc;
+            border-left: 4px solid #2563eb;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .method {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-right: 10px;
+            font-size: 0.9em;
+        }
+        .method-get {
+            background-color: #10b981;
+            color: white;
+        }
+        .method-post {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .method-put {
+            background-color: #f59e0b;
+            color: white;
+        }
+        .method-delete {
+            background-color: #ef4444;
+            color: white;
+        }
+        .endpoint {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: block;
+        }
+        .params {
+            margin-top: 15px;
+        }
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .param-table th, .param-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .param-table th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            color: #334155;
+        }
+        .required {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .code-block {
+            background-color: #1e293b;
+            color: #f1f5f9;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 15px 0;
+        }
+        .example {
+            background-color: #ecfdf5;
+            border: 1px solid #d1fae5;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .auth-info {
+            background-color: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .auth-info h3 {
+            margin-top: 0;
+            color: #92400e;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+            margin-top: 40px;
+        }
+        @media (max-width: 768px) {
+            .param-table {
+                font-size: 0.9em;
+            }
+            .param-table th, .param-table td {
+                padding: 8px;
+            }
+            .endpoint {
+                word-break: break-all;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Email Server API</h1>
+        <p class="subtitle">云服务器yyc3-121 邮件服务接口文档</p>
+    </header>
+
+    <div class="main-content">
+        <div class="auth-info">
+            <h3>🔒 认证信息</h3>
+            <p>所有API接口需要在请求头中提供有效的认证令牌：</p>
+            <div class="code-block">Authorization: Bearer YOUR_API_TOKEN</div>
+            <p>请联系管理员获取API访问令牌。</p>
+        </div>
+
+        <div class="api-section">
+            <h2>基础信息</h2>
+            <p>API基础URL：<code>https://email.yyc3-121/api/v1</code></p>
+            <p>API版本：v1</p>
+            <p>支持的内容类型：application/json</p>
+        </div>
+
+        <div class="api-section">
+            <h2>邮件发送</h2>
+            <div class="endpoint-card">
+                <span class="method method-post">POST</span>
+                <h3>发送单封邮件</h3>
+                <div class="endpoint">/api/v1/email/send</div>
+                <p><strong>描述：</strong>发送单封电子邮件</p>
+                
+                <div class="params">
+                    <h4>请求参数</h4>
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>参数名</th>
+                                <th>类型</th>
+                                <th>必填</th>
+                                <th>描述</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>to</td>
+                                <td>string</td>
+                                <td><span class="required">✓</span></td>
+                                <td>收件人邮箱地址</td>
+                            </tr>
+                            <tr>
+                                <td>subject</td>
+                                <td>string</td>
+                                <td><span class="required">✓</span></td>
+                                <td>邮件主题</td>
+                            </tr>
+                            <tr>
+                                <td>body</td>
+                                <td>string</td>
+                                <td><span class="required">✓</span></td>
+                                <td>邮件正文内容</td>
+                            </tr>
+                            <tr>
+                                <td>isHtml</td>
+                                <td>boolean</td>
+                                <td></td>
+                                <td>是否为HTML格式邮件（默认：false）</td>
+                            </tr>
+                            <tr>
+                                <td>from</td>
+                                <td>string</td>
+                                <td></td>
+                                <td>发件人地址（默认使用系统配置）</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="example">
+                    <h4>请求示例</h4>
+                    <div class="code-block">
+{<br>
+  "to": "user@example.com",<br>
+  "subject": "测试邮件",<br>
+  "body": "这是一封测试邮件",<br>
+  "isHtml": false<br>
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>邮件查询</h2>
+            <div class="endpoint-card">
+                <span class="method method-get">GET</span>
+                <h3>获取发送记录</h3>
+                <div class="endpoint">/api/v1/email/history?limit=10&offset=0</div>
+                <p><strong>描述：</strong>查询邮件发送历史记录</p>
+                
+                <div class="params">
+                    <h4>查询参数</h4>
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>参数名</th>
+                                <th>类型</th>
+                                <th>必填</th>
+                                <th>描述</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>limit</td>
+                                <td>integer</td>
+                                <td></td>
+                                <td>返回记录数量（默认：10，最大：100）</td>
+                            </tr>
+                            <tr>
+                                <td>offset</td>
+                                <td>integer</td>
+                                <td></td>
+                                <td>偏移量（默认：0）</td>
+                            </tr>
+                            <tr>
+                                <td>status</td>
+                                <td>string</td>
+                                <td></td>
+                                <td>状态过滤（sent/failed/pending）</td>
+                            </tr>
+                            <tr>
+                                <td>dateFrom</td>
+                                <td>string</td>
+                                <td></td>
+                                <td>开始日期（ISO格式）</td>
+                            </tr>
+                            <tr>
+                                <td>dateTo</td>
+                                <td>string</td>
+                                <td></td>
+                                <td>结束日期（ISO格式）</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>系统状态</h2>
+            <div class="endpoint-card">
+                <span class="method method-get">GET</span>
+                <h3>获取API状态</h3>
+                <div class="endpoint">/api/v1/status</div>
+                <p><strong>描述：</strong>获取邮件服务API的运行状态信息</p>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>错误码说明</h2>
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>错误码</th>
+                        <th>描述</th>
+                        <th>解决方案</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>401</td>
+                        <td>未授权访问</td>
+                        <td>请检查API令牌是否有效</td>
+                    </tr>
+                    <tr>
+                        <td>400</td>
+                        <td>请求参数错误</td>
+                        <td>检查请求参数格式是否正确</td>
+                    </tr>
+                    <tr>
+                        <td>500</td>
+                        <td>服务器内部错误</td>
+                        <td>联系管理员检查服务器日志</td>
+                    </tr>
+                    <tr>
+                        <td>429</td>
+                        <td>请求频率过高</td>
+                        <td>降低请求频率，稍后重试</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2024 云服务器yyc3-121 | Email Server API</p>
+    </footer>
+</body>
+</html>

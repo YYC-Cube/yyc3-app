@@ -1,0 +1,53 @@
+# 依赖目录
+node_modules/
+
+# 构建输出
+dist/
+build/
+.next/
+.nuxt/
+out/
+.cache/
+
+# 日志文件
+logs/
+*.log
+
+# 测试覆盖率
+.nyc_output/
+*.lcov
+coverage/
+
+# 编辑器和IDE配置
+.vscode/
+.idea/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# Docker相关
+.docker/
+
+# 文档构建
+.docusaurus/
+_site/
+
+# 临时文件
+*.tmp
+*.temp
+.temp/
+
+# 健康监控日志
+.trae/logs/
+
+# 服务日志
+var/log/
+
+# 本地数据
+mnt/data/
+
+# 备份文件
+*.bak
+*.backup
+*.old

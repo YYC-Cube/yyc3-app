@@ -1,0 +1,256 @@
+{
+  "service": {
+    "name": "YYC3 API Service",
+    "version": "3.0.0",
+    "description": "YYC3 AI Family 核心API服务",
+    "author": "YYC3 AI Family Team",
+    "license": "MIT"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": {
+      "development": 3000,
+      "production": 6600,
+      "testing": 4000
+    },
+    "timeout": 30000,
+    "keepAlive": true,
+    "compression": true,
+    "cors": {
+      "enabled": true,
+      "origins": ["*"],
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "credentials": true
+    }
+  },
+  "database": {
+    "type": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "name": "yyc3_production",
+    "username": "yyc3_user",
+    "password": "${DB_PASSWORD}",
+    "ssl": true,
+    "pool": {
+      "min": 5,
+      "max": 20,
+      "acquireTimeoutMillis": 60000,
+      "idleTimeoutMillis": 300000,
+      "createTimeoutMillis": 30000,
+      "destroyTimeoutMillis": 5000
+    },
+    "migrations": {
+      "directory": "./database/migrations",
+      "tableName": "migrations"
+    },
+    "seeds": {
+      "directory": "./database/seeds"
+    }
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "password": "${REDIS_PASSWORD}",
+    "db": 0,
+    "keyPrefix": "yyc3:api:",
+    "cluster": {
+      "enabled": false,
+      "nodes": []
+    },
+    "sentinel": {
+      "enabled": false,
+      "name": "mymaster",
+      "sentinels": []
+    }
+  },
+  "auth": {
+    "jwt": {
+      "secret": "${JWT_SECRET}",
+      "algorithm": "HS256",
+      "expiresIn": "24h",
+      "refreshExpiresIn": "7d",
+      "issuer": "YYC3 AI Family",
+      "audience": "YYC3 Users"
+    },
+    "bcrypt": {
+      "rounds": 12
+    },
+    "session": {
+      "secret": "${SESSION_SECRET}",
+      "name": "yyc3-session",
+      "maxAge": 3600000,
+      "secure": true,
+      "httpOnly": true
+    }
+  },
+  "rateLimiting": {
+    "windowMs": 900000,
+    "max": 100,
+    "standardHeaders": true,
+    "legacyHeaders": false,
+    "message": "请求过于频繁，请稍后再试"
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "dir": "./logs",
+    "filename": "api-service",
+    "maxsize": "100MB",
+    "maxFiles": 10,
+    "datePattern": "YYYY-MM-DD",
+    "colorize": false,
+    "prettyPrint": false
+  },
+  "monitoring": {
+    "enabled": true,
+    "port": 9090,
+    "path": "/metrics",
+    "collectDefaultMetrics": true,
+    "gcMetrics": true
+  },
+  "healthCheck": {
+    "enabled": true,
+    "path": "/health",
+    "interval": 30000,
+    "checks": {
+      "database": true,
+      "redis": true,
+      "memory": true,
+      "disk": true
+    }
+  },
+  "api": {
+    "version": "v1",
+    "prefix": "/api/v1",
+    "documentation": {
+      "enabled": true,
+      "path": "/api/docs",
+      "title": "YYC3 API Documentation",
+      "description": "YYC3 AI Family API 接口文档"
+    },
+    "pagination": {
+      "defaultLimit": 20,
+      "maxLimit": 100
+    },
+    "sort": {
+      "default": "-createdAt",
+      "allowed": ["id", "createdAt", "updatedAt", "name", "email"]
+    },
+    "filter": {
+      "allowed": ["status", "type", "category"]
+    }
+  },
+  "security": {
+    "helmet": {
+      "enabled": true,
+      "contentSecurityPolicy": {
+        "directives": {
+          "defaultSrc": ["'self'"],
+          "styleSrc": ["'self'", "'unsafe-inline'"],
+          "scriptSrc": ["'self'"],
+          "imgSrc": ["'self'", "data:", "https:"]
+        }
+      }
+    },
+    "xss": {
+      "enabled": true
+    },
+    "csrf": {
+      "enabled": true,
+      "secret": "${CSRF_SECRET}"
+    }
+  },
+  "middleware": {
+    "requestId": {
+      "enabled": true,
+      "headerName": "X-Request-ID"
+    },
+    "requestLogger": {
+      "enabled": true,
+      "excludePaths": ["/health", "/metrics"]
+    },
+    "responseTime": {
+      "enabled": true,
+      "headerName": "X-Response-Time"
+    }
+  },
+  "cache": {
+    "strategy": "redis",
+    "ttl": {
+      "short": 300,
+      "medium": 1800,
+      "long": 7200
+    },
+    "keys": {
+      "users": "user:{id}",
+      "settings": "settings:{key}",
+      "config": "config:{section}"
+    }
+  },
+  "queue": {
+    "driver": "redis",
+    "connection": {
+      "host": "localhost",
+      "port": 6379,
+      "password": "${REDIS_PASSWORD}",
+      "db": 1
+    },
+    "default": "default",
+    "queues": {
+      "email": "email",
+      "notification": "notification",
+      "analytics": "analytics",
+      "cleanup": "cleanup"
+    },
+    "attempts": 3,
+    "delay": 5000
+  },
+  "email": {
+    "driver": "smtp",
+    "smtp": {
+      "host": "${SMTP_HOST}",
+      "port": 587,
+      "secure": false,
+      "auth": {
+        "user": "${SMTP_USER}",
+        "pass": "${SMTP_PASSWORD}"
+      }
+    },
+    "from": {
+      "name": "YYC3 AI Family",
+      "address": "noreply@0379.email"
+    },
+    "queue": true
+  },
+  "storage": {
+    "driver": "local",
+    "local": {
+      "root": "./uploads",
+      "url": "/uploads"
+    },
+    "validation": {
+      "maxSize": 10485760,
+      "allowedTypes": ["image/jpeg", "image/png", "image/gif", "application/pdf"],
+      "allowedExtensions": [".jpg", ".jpeg", ".png", ".gif", ".pdf"]
+    }
+  },
+  "features": {
+    "analytics": {
+      "enabled": true,
+      "provider": "custom"
+    },
+    "notifications": {
+      "enabled": true,
+      "channels": ["email", "webhook", "websocket"]
+    },
+    "webhooks": {
+      "enabled": true,
+      "secret": "${WEBHOOK_SECRET}",
+      "timeout": 10000
+    },
+    "search": {
+      "enabled": false,
+      "provider": "elasticsearch"
+    }
+  }
+}

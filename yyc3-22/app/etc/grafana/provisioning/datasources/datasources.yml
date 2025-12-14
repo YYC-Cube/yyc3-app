@@ -1,0 +1,45 @@
+apiVersion: 1
+
+# Grafana数据源配置
+# 版本：1.0.0
+# 创建日期：2024-01-15
+
+# 删除所有未在配置中定义的数据源
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+  - name: Loki
+    orgId: 1
+
+# 数据源配置
+datasources:
+  # Prometheus数据源
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://prometheus:9090
+    basicAuth: false
+    isDefault: true
+    version: 1
+    editable: true
+    jsonData:
+      timeInterval: 15s
+
+  # Loki数据源
+  - name: Loki
+    type: loki
+    access: proxy
+    orgId: 1
+    url: http://loki:3100
+    basicAuth: false
+    version: 1
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - name: TraceID
+          datasourceUid: tempo
+          matcherRegex: '(?P<traceId>\w+)'  # 根据实际的TraceID格式调整
+          url: '$${__value.raw}'
+          urlDisplayLabel: 'View Trace'

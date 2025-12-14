@@ -1,0 +1,106 @@
+version: '3.8'
+
+networks:
+  keycloak-network:
+    driver: bridge
+
+volumes:
+  keycloak-db-data:
+    driver: local
+  keycloak-data:
+    driver: local
+
+
+services:
+  keycloak-db:
+    image: postgres:15
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+    networks:
+      - keycloak-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "keycloak"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_DB_SCHEMA: public
+      KC_HOSTNAME: localhost
+      KC_HTTP_PORT: 8080
+      KC_HTTPS_PORT: 8443
+      KC_HTTP_ENABLED: "true"
+      KC_HTTPS_ENABLED: "true"
+      KC_HTTPS_KEY_STORE_FILE: /opt/keycloak/conf/keycloak.jks
+      KC_HTTPS_KEY_STORE_PASSWORD: keycloak
+      KC_ADMIN: admin
+      KC_ADMIN_PASSWORD: admin
+      KC_LOG_LEVEL: info
+      KC_METRICS_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./keycloak.jks:/opt/keycloak/conf/keycloak.jks:ro
+    networks:
+      - keycloak-network
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    command: start --optimized
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  keycloak-proxy:
+    image: nginx:1.25
+    container_name: keycloak-proxy
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - keycloak-network
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    restart: unless-stopped
+
+  keycloak-exporter:
+    image: bitnami/keycloak-exporter:1.0.0
+    container_name: keycloak-exporter
+    environment:
+      KEYCLOAK_SERVER: http://keycloak:8080
+      KEYCLOAK_USERNAME: admin
+      KEYCLOAK_PASSWORD: admin
+      KEYCLOAK_REALM: master
+      EXPORTER_PORT: 9999
+      EXPORTER_LOG_LEVEL: info
+    networks:
+      - keycloak-network
+    ports:
+      - "9999:9999"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    restart: unless-stopped

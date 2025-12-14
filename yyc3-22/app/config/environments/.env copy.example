@@ -1,0 +1,14 @@
+# 服务配置
+PORT=3000
+HOST=0.0.0.0
+NODE_ENV=production
+
+# 安全与认证
+API_KEY=your_api_key_here
+JWT_SECRET=your_jwt_secret
+
+# 数据库连接
+DB_URI=mongodb://localhost:27017/app
+
+# 日志与调试
+LOG_LEVEL=info

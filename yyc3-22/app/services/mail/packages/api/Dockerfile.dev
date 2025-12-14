@@ -1,0 +1,40 @@
+# 🚀 邮件平台API服务开发环境Dockerfile
+# @file Dockerfile.dev
+# @description 用于本地开发的API服务Docker容器配置
+# @author YYC
+# @version 1.0.0
+# @created 2024-10-15
+
+FROM node:20
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制package.json和package-lock.json
+COPY package*.json ./
+
+# 安装所有依赖（包括开发依赖）
+RUN npm install
+
+# 复制源代码
+COPY src/ ./src/
+COPY tsconfig.json ./
+
+# 创建环境变量示例文件（如果不存在）
+RUN if [ ! -f .env.example ]; then touch .env.example; fi
+
+# 设置文件权限（开发环境）
+RUN chown -R node:node /app
+
+# 切换到node用户
+USER node
+
+# 设置环境变量
+ENV NODE_ENV=development
+ENV PORT=3000
+
+# 暴露端口
+EXPOSE 3000
+
+# 启动命令 - 使用ts-node-dev进行热重载
+CMD ["npm", "run", "dev"]

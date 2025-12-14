@@ -1,0 +1,444 @@
+version: '3.8'
+
+# 统一网络配置
+networks:
+  yyc3-network:
+    driver: bridge
+    name: yyc3-network
+
+# 持久化存储
+volumes:
+  prometheus-data:
+    name: yyc3-prometheus-data
+  grafana-data:
+    name: yyc3-grafana-data
+  loki-data:
+    name: yyc3-loki-data
+  promtail-config:
+    name: yyc3-promtail-config
+  rabbitmq-data:
+    name: yyc3-rabbitmq-data
+  postgres-master-data:
+    name: yyc3-postgres-master-data
+  postgres-slave-data:
+    name: yyc3-postgres-slave-data
+  redis-data:
+    name: yyc3-redis-data
+  minio-data:
+    name: yyc3-minio-data
+
+# 基础服务配置
+services:
+  # -----------------------
+  # 核心业务服务
+  # -----------------------
+  api-server:
+    image: node:18
+    container_name: api-server
+    working_dir: /app
+    volumes:
+      - ./api:/app
+      - ./shared/logs/api:/var/log/api
+    ports:
+      - "6600:3000"
+    command: node server.js
+    networks:
+      - yyc3-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  admin-server:
+    image: node:18
+    container_name: admin-server
+    working_dir: /app
+    volumes:
+      - ./admin:/app
+      - ./shared/logs/admin:/var/log/admin
+    ports:
+      - "6601:3001"
+    command: node server.js
+    networks:
+      - yyc3-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  llm-server:
+    image: node:18
+    container_name: llm-server
+    working_dir: /app
+    volumes:
+      - ./llm:/app
+      - ./shared/logs/llm:/var/log/llm
+    ports:
+      - "6602:3002"
+    command: node server.js
+    networks:
+      - yyc3-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  redis-api-server:
+    image: node:18
+    container_name: redis-api-server
+    working_dir: /app
+    volumes:
+      - ./redis/api:/app
+      - ./shared/logs/redis-api:/var/log/redis-api
+    ports:
+      - "3101:3101"
+    command: npm start
+    networks:
+      - yyc3-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:3101/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  mail-server:
+    image: node:18
+    container_name: mail-server
+    working_dir: /app/packages/api
+    volumes:
+      - ./mail:/app
+      - ./shared/logs/mail:/var/log/mail
+    ports:
+      - "6603:3105"
+    command: pnpm start
+    networks:
+      - yyc3-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:3105/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  monitor-server:
+    image: grafana/loki:2.9.0
+    container_name: monitor-server
+    volumes:
+      - loki-data:/loki
+      - ./etc/loki/loki-config.yml:/etc/loki/loki-config.yml
+    ports:
+      - "3002:3100"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yml
+
+  # -----------------------
+  # 监控服务
+  # -----------------------
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus
+    volumes:
+      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: grafana
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./etc/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3003:3000"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin_yyc3
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-loki-datasource
+
+  # -----------------------
+  # 日志管理
+  # -----------------------
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    volumes:
+      - loki-data:/loki
+      - ./etc/loki/loki-config.yml:/etc/loki/loki-config.yml
+    ports:
+      - "3100:3100"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yml
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail
+    volumes:
+      - ./etc/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml
+      - ./shared/logs:/var/log/yyc3
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/promtail-config.yml
+
+  # -----------------------
+  # 数据存储服务 - PostgreSQL主从复制
+  # -----------------------
+  postgres-master:
+    image: postgres:15.4
+    container_name: postgres-master
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=yyc3_db
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_INITDB_ARGS="--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres-master-data:/var/lib/postgresql/data
+      - ./etc/postgresql/master/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+      - ./etc/postgresql/master/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+    ports:
+      - "5432:5432"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d yyc3_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres-slave:
+    image: postgres:15.4
+    container_name: postgres-slave
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=yyc3_db
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_INITDB_ARGS="--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres-slave-data:/var/lib/postgresql/data
+      - ./etc/postgresql/slave/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+      - ./etc/postgresql/slave/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+      - ./etc/postgresql/slave/recovery.conf:/var/lib/postgresql/data/recovery.conf
+    ports:
+      - "5433:5432"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    depends_on:
+      - postgres-master
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d yyc3_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # -----------------------
+  # Redis Sentinel集群
+  # -----------------------
+  redis-master:
+    image: redis:7.0.12
+    container_name: redis-master
+    volumes:
+      - redis-data:/data
+      - ./config/redis-master.conf:/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a password ping | grep PONG"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis-slave1:
+    image: redis:7.0.12
+    container_name: redis-slave1
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a password ping | grep PONG"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./config/redis-slave.conf:/etc/redis/redis.conf
+    depends_on:
+      - redis-master
+
+  redis-slave2:
+    image: redis:7.0.12
+    container_name: redis-slave2
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a password ping | grep PONG"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./config/redis-slave.conf:/etc/redis/redis.conf
+    depends_on:
+      - redis-master
+
+  redis-sentinel1:
+    image: redis:7.0.12
+    container_name: redis-sentinel1
+    ports:
+      - "26379:26379"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command: redis-sentinel /etc/redis/sentinel.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -p 26379 ping | grep PONG"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./config/redis-sentinel.conf:/etc/redis/sentinel.conf
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+
+  redis-sentinel2:
+    image: redis:7.0.12
+    container_name: redis-sentinel2
+    ports:
+      - "26380:26379"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command: redis-sentinel /etc/redis/sentinel.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -p 26379 ping | grep PONG"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./config/redis-sentinel.conf:/etc/redis/sentinel.conf
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+
+  redis-sentinel3:
+    image: redis:7.0.12
+    container_name: redis-sentinel3
+    ports:
+      - "26381:26379"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command: redis-sentinel /etc/redis/sentinel.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -p 26379 ping | grep PONG"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./config/redis-sentinel.conf:/etc/redis/sentinel.conf
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+
+  minio:
+    image: minio/minio:RELEASE.2023-11-10T18-41-36Z
+    container_name: minio
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password_yyc3
+
+  # -----------------------
+  # 消息队列服务
+  # -----------------------
+  rabbitmq:
+    image: rabbitmq:3.12.6-management
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=password
+      - RABBITMQ_DEFAULT_VHOST=/
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{channel,error}]
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"  # AMQP端口
+      - "15672:15672"  # 管理界面端口
+      - "15692:15692"  # Prometheus指标端口
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # -----------------------
+  # 服务发现与负载均衡
+  # -----------------------
+  nginx:
+    image: nginx:1.25.3
+    container_name: nginx
+    volumes:
+      - ./etc/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./etc/nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - yyc3-network
+    restart: unless-stopped
+    depends_on:
+      - api-server
+      - admin-server
+      - llm-server
+      - mail-server
+      - rabbitmq
+      - postgres-master
+      - redis-master

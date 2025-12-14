@@ -1,0 +1,94 @@
+# 依赖目录
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 环境变量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.example
+
+# 构建输出
+dist/
+build/
+.next/
+.nuxt/
+out/
+.cache/
+coverage/
+
+# 编辑器和IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 日志文件
+logs/
+*.log
+log/
+
+# 操作系统文件
+Thumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# 测试覆盖率
+.nyc_output/
+*.lcov
+
+# 临时文件
+*.tmp
+*.temp
+.temp/
+
+# 包管理器文件
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Docker相关
+.docker/
+docker-compose.override.yml
+
+# CI/CD
+.ci/
+.travis.yml
+.github/workflows/
+.gitlab-ci.yml
+
+# 文档构建
+.docusaurus/
+_site/
+
+# 健康监控日志
+.trae/logs/
+
+# 服务日志
+var/log/
+
+# 本地数据
+mnt/data/
+
+# 备份文件
+*.bak
+*.backup
+*.old
+*~

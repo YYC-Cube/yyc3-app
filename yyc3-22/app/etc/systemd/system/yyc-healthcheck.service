@@ -1,0 +1,7 @@
+# yyc-healthcheck.service
+[Unit]
+Description=Admin Healthcheck Probe
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -s http://127.0.0.1:3001/api/healthcheck >> /var/log/admin-health.log

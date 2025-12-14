@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>版本变更记录 - 0379.email</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    /* 基础样式 */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    /* 标题样式 */
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+    
+    h2 {
+      color: #34495e;
+      margin-top: 40px;
+    }
+    
+    /* 版本选择器样式 */
+    .selector-container {
+      margin: 20px 0;
+    }
+    
+    label {
+      font-weight: bold;
+      margin-right: 10px;
+      color: #2c3e50;
+    }
+    
+    select {
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: white;
+      font-size: 16px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: border-color 0.3s;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+    
+    /* 版本区块样式 */
+    .version-block {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid #3498db;
+    }
+    
+    .version-title {
+      font-weight: bold;
+      font-size: 1.4em;
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+    
+    .change-section {
+      margin-top: 15px;
+    }
+    
+    .change-section h3 {
+      color: #34495e;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+    
+    ul {
+      padding-left: 25px;
+    }
+    
+    li {
+      margin-bottom: 8px;
+    }
+    
+    /* 图表容器样式 */
+    .chart-container {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    canvas {
+      max-width: 100%;
+      height: auto !important;
+    }
+    
+    /* 加载状态样式 */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+    
+    /* 错误提示样式 */
+    .error {
+      padding: 20px;
+      background-color: #ffdddd;
+      border: 1px solid #ff9999;
+      border-radius: 5px;
+      color: #d32f2f;
+      margin: 20px 0;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+      
+      .version-block,
+      .chart-container {
+        padding: 15px;
+      }
+      
+      select {
+        width: 100%;
+      }
+    }
+    
+    /* 暗色模式支持 */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #1e1e1e;
+        color: #eee;
+      }
+      
+      h1 {
+        color: #e0e0e0;
+        border-bottom-color: #566473;
+      }
+      
+      h2 {
+        color: #d0d0d0;
+      }
+      
+      label {
+        color: #e0e0e0;
+      }
+      
+      select {
+        background-color: #2d2d2d;
+        border-color: #444;
+        color: #eee;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      
+      .version-block,
+      .chart-container {
+        background-color: #2d2d2d;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      }
+      
+      .version-title {
+        color: #e0e0e0;
+      }
+      
+      .change-section h3 {
+        color: #d0d0d0;
+      }
+      
+      .loading {
+        color: #b0b0b0;
+      }
+      
+      .error {
+        background-color: #4a2525;
+        border-color: #8b4513;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>📘 版本变更记录 - 0379.email</h1>
+  
+  <div class="selector-container">
+    <label for="versionSelector">选择版本：</label>
+    <select id="versionSelector"></select>
+  </div>
+  
+  <div id="changelogSummary">
+    <div class="loading">加载中...</div>
+  </div>
+  
+  <div class="chart-container">
+    <h2>📊 版本发布时间趋势</h2>
+    <canvas id="versionTrend"></canvas>
+  </div>
+  
+  <div class="chart-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h2>📊 每版本变更项数量</h2>
+      <div class="chart-controls">
+        <button id="viewAllBtn" class="chart-btn active">全部</button>
+        <button id="viewZhBtn" class="chart-btn">中文</button>
+        <button id="viewEnBtn" class="chart-btn">英文</button>
+      </div>
+    </div>
+    <canvas id="changeStats"></canvas>
+  </div>
+
+  <script>
+    // 全局数据变量
+    let changelogData = [];
+    let versionsData = [];
+    let versionTrendChart = null;
+    let changeStatsChart = null;
+    
+    /**
+     * 加载changelog和versions数据
+     */
+    async function loadData() {
+      try {
+        // 显示加载状态
+        document.getElementById('changelogSummary').innerHTML = '<div class="loading">正在加载版本数据...</div>';
+        
+        // 加载changelog.json
+        const changelogRes = await fetch('changelog.json');
+        if (!changelogRes.ok) {
+          throw new Error(`无法加载 changelog.json: ${changelogRes.status}`);
+        }
+        changelogData = await changelogRes.json();
+        
+        // 加载versions.json (如果不存在，从changelog.json生成)
+        try {
+          const versionsRes = await fetch('versions.json');
+          if (versionsRes.ok) {
+            versionsData = await versionsRes.json();
+          } else {
+            console.warn('versions.json 不存在，从 changelog.json 生成');
+            versionsData = generateVersionsFromChangelog();
+          }
+        } catch (error) {
+          console.warn('加载 versions.json 失败，从 changelog.json 生成');
+          versionsData = generateVersionsFromChangelog();
+        }
+        
+        // 初始化页面元素
+        populateVersionSelector();
+        renderSummary();
+        renderCharts();
+        
+      } catch (error) {
+        console.error('加载数据失败:', error);
+        document.getElementById('changelogSummary').innerHTML = `
+          <div class="error">
+            <strong>加载失败:</strong> ${error.message}<br>
+            请检查 changelog.json 文件是否存在且格式正确。
+          </div>
+        `;
+      }
+    }
+    
+    /**
+     * 从changelog数据生成versions数据
+     */
+    function generateVersionsFromChangelog() {
+      return changelogData.map(entry => ({
+        version: entry.version,
+        date: entry.date,
+        timestamp: ''
+      }));
+    }
+    
+    /**
+     * 填充版本选择器
+     */
+    function populateVersionSelector() {
+      const selector = document.getElementById('versionSelector');
+      
+      // 清空现有选项
+      selector.innerHTML = '';
+      
+      // 添加默认选项
+      const defaultOption = document.createElement('option');
+      defaultOption.value = 'all';
+      defaultOption.textContent = '显示所有版本';
+      selector.appendChild(defaultOption);
+      
+      // 添加各个版本选项
+      versionsData.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v.version;
+        option.textContent = `${v.version} (${v.date})`;
+        selector.appendChild(option);
+      });
+      
+      // 添加变更事件监听
+      selector.addEventListener('change', renderSummary);
+    }
+    
+    /**
+     * 渲染选中版本的变更摘要
+     */
+    function renderSummary() {
+      const selectedVersion = document.getElementById('versionSelector').value;
+      const container = document.getElementById('changelogSummary');
+      
+      let entries = changelogData;
+      if (selectedVersion && selectedVersion !== 'all') {
+        entries = changelogData.filter(e => e.version === selectedVersion);
+      }
+      
+      if (entries.length === 0) {
+        container.innerHTML = '<div class="error">未找到指定版本的变更记录</div>';
+        return;
+      }
+      
+      // 清空容器并添加版本块
+      container.innerHTML = '';
+      
+      entries.forEach(entry => {
+        const block = document.createElement('div');
+        block.className = 'version-block';
+        
+        // 版本标题
+        const title = document.createElement('div');
+        title.className = 'version-title';
+        title.textContent = `${entry.version} - ${entry.date}`;
+        block.appendChild(title);
+        
+        // 中文变更项
+        const zhSection = document.createElement('div');
+        zhSection.className = 'change-section';
+        const zhTitle = document.createElement('h3');
+        zhTitle.textContent = '中文变更项';
+        zhSection.appendChild(zhTitle);
+        
+        const zhList = document.createElement('ul');
+        if (entry.changes && entry.changes.zh && Array.isArray(entry.changes.zh)) {
+          entry.changes.zh.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            zhList.appendChild(li);
+          });
+        }
+        zhSection.appendChild(zhList);
+        block.appendChild(zhSection);
+        
+        // 英文变更项
+        const enSection = document.createElement('div');
+        enSection.className = 'change-section';
+        const enTitle = document.createElement('h3');
+        enTitle.textContent = 'English Changes';
+        enSection.appendChild(enTitle);
+        
+        const enList = document.createElement('ul');
+        if (entry.changes && entry.changes.en && Array.isArray(entry.changes.en)) {
+          entry.changes.en.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            enList.appendChild(li);
+          });
+        }
+        enSection.appendChild(enList);
+        block.appendChild(enSection);
+        
+        container.appendChild(block);
+      });
+    }
+    
+    /**
+     * 渲染图表
+     */
+    function renderCharts() {
+      // 销毁已存在的图表
+      if (versionTrendChart) {
+        versionTrendChart.destroy();
+      }
+      if (changeStatsChart) {
+        changeStatsChart.destroy();
+      }
+      
+      // 获取上下文
+      const ctxTrend = document.getElementById('versionTrend').getContext('2d');
+      const ctxStats = document.getElementById('changeStats').getContext('2d');
+      
+      // 准备数据
+      const labels = versionsData.map(v => v.version);
+      const timestamps = versionsData.map(v => new Date(v.date).getTime());
+      
+      // 计算变更项数量
+      const enCounts = versionsData.map(v => {
+        const entry = changelogData.find(e => e.version === v.version);
+        return entry && entry.changes && entry.changes.en ? entry.changes.en.length : 0;
+      });
+      
+      const zhCounts = versionsData.map(v => {
+        const entry = changelogData.find(e => e.version === v.version);
+        return entry && entry.changes && entry.changes.zh ? entry.changes.zh.length : 0;
+      });
+      
+      // 判断暗色模式
+      const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const textColor = isDarkMode ? '#e0e0e0' : '#333';
+      const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+      
+      // 创建版本趋势图表
+      versionTrendChart = new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '发布时间',
+            data: timestamps,
+            borderColor: '#3498db',
+            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+            borderWidth: 2,
+            pointBackgroundColor: '#3498db',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: textColor,
+                font: {
+                  size: 14
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `发布时间: ${new Date(context.raw).toLocaleDateString('zh-CN')}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: textColor,
+                font: {
+                  size: 12
+                }
+              }
+            },
+            y: {
+              grid: {
+                color: gridColor
+              },
+              ticks: {
+                color: textColor,
+                font: {
+                  size: 12
+                },
+                callback: function(value) {
+                  return new Date(value).toLocaleDateString('zh-CN');
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      // 根据当前视图准备数据集
+      function getCurrentDatasets() {
+        if (currentView === 'zh') {
+          return [
+            {
+              label: '中文变更项',
+              data: zhCounts,
+              backgroundColor: 'rgba(46, 204, 113, 0.7)',
+              borderColor: '#2ecc71',
+              borderWidth: 1,
+              hoverBackgroundColor: 'rgba(46, 204, 113, 0.9)',
+              hoverBorderColor: '#2ecc71',
+              pointHoverCursor: 'pointer'
+            }
+          ];
+        } else if (currentView === 'en') {
+          return [
+            {
+              label: '英文变更项',
+              data: enCounts,
+              backgroundColor: 'rgba(243, 156, 18, 0.7)',
+              borderColor: '#f39c12',
+              borderWidth: 1,
+              hoverBackgroundColor: 'rgba(243, 156, 18, 0.9)',
+              hoverBorderColor: '#f39c12',
+              pointHoverCursor: 'pointer'
+            }
+          ];
+        } else { // 'all'
+          return [
+            {
+              label: '中文变更项',
+              data: zhCounts,
+              backgroundColor: 'rgba(46, 204, 113, 0.7)',
+              borderColor: '#2ecc71',
+              borderWidth: 1,
+              hoverBackgroundColor: 'rgba(46, 204, 113, 0.9)',
+              hoverBorderColor: '#2ecc71',
+              pointHoverCursor: 'pointer'
+            },
+            {
+              label: '英文变更项',
+              data: enCounts,
+              backgroundColor: 'rgba(243, 156, 18, 0.7)',
+              borderColor: '#f39c12',
+              borderWidth: 1,
+              hoverBackgroundColor: 'rgba(243, 156, 18, 0.9)',
+              hoverBorderColor: '#f39c12',
+              pointHoverCursor: 'pointer'
+            }
+          ];
+        }
+      }
+      
+      // 创建变更统计图表
+      changeStatsChart = new Chart(ctxStats, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: getCurrentDatasets()
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: textColor,
+                font: {
+                  size: 14
+                }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              borderColor: '#2ecc71',
+              borderWidth: 1,
+              padding: 10,
+              cornerRadius: 5,
+              callbacks: {
+                title: function(context) {
+                  return `版本: ${context[0].label}`;
+                },
+                label: function(context) {
+                  const version = context.label;
+                  const entry = changelogData.find(e => e.version === version);
+                  const zhCount = entry && entry.changes && entry.changes.zh ? entry.changes.zh.length : 0;
+                  const enCount = entry && entry.changes && entry.changes.en ? entry.changes.en.length : 0;
+                  
+                  if (context.dataset.label.includes('中文')) {
+                    return `中文变更: ${zhCount}`;
+                  } else if (context.dataset.label.includes('英文')) {
+                    return `英文变更: ${enCount}`;
+                  }
+                  return context.dataset.label + ': ' + context.raw;
+                },
+                afterBody: function(context) {
+                  return ['(点击查看详情)'];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: textColor,
+                font: {
+                  size: 12
+                }
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: gridColor
+              },
+              ticks: {
+                color: textColor,
+                font: {
+                  size: 12
+                },
+                precision: 0
+              }
+            }
+          },
+          onClick: function(event, elements) {
+            if (elements.length > 0) {
+              const index = elements[0].index;
+              const version = labels[index];
+              selectVersion(version);
+            }
+          }
+        }
+      });
+      
+      // 设置视图切换按钮事件
+      setupViewToggleButtons();
+    }
+    
+    /**
+     * 选择指定版本
+     */
+    function selectVersion(version) {
+      const selector = document.getElementById('versionSelector');
+      selector.value = version;
+      renderSummary();
+      
+      // 滚动到摘要部分
+      document.getElementById('changelogSummary').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    /**
+     * 设置视图切换按钮事件
+     */
+    function setupViewToggleButtons() {
+      const viewAllBtn = document.getElementById('viewAllBtn');
+      const viewZhBtn = document.getElementById('viewZhBtn');
+      const viewEnBtn = document.getElementById('viewEnBtn');
+      
+      if (viewAllBtn && viewZhBtn && viewEnBtn) {
+        viewAllBtn.addEventListener('click', () => {
+          currentView = 'all';
+          updateViewButtons();
+          updateChangeStatsChart();
+        });
+        
+        viewZhBtn.addEventListener('click', () => {
+          currentView = 'zh';
+          updateViewButtons();
+          updateChangeStatsChart();
+        });
+        
+        viewEnBtn.addEventListener('click', () => {
+          currentView = 'en';
+          updateViewButtons();
+          updateChangeStatsChart();
+        });
+      }
+    }
+    
+    /**
+     * 更新视图按钮状态
+     */
+    function updateViewButtons() {
+      const viewAllBtn = document.getElementById('viewAllBtn');
+      const viewZhBtn = document.getElementById('viewZhBtn');
+      const viewEnBtn = document.getElementById('viewEnBtn');
+      
+      if (viewAllBtn && viewZhBtn && viewEnBtn) {
+        viewAllBtn.classList.toggle('active', currentView === 'all');
+        viewZhBtn.classList.toggle('active', currentView === 'zh');
+        viewEnBtn.classList.toggle('active', currentView === 'en');
+      }
+    }
+    
+    /**
+     * 更新变更统计图表
+     */
+    function updateChangeStatsChart() {
+      if (changeStatsChart) {
+        changeStatsChart.data.datasets = getCurrentDatasets();
+        changeStatsChart.update();
+      }
+    }
+    
+    /**
+     * 获取当前视图的数据集
+     */
+    function getCurrentDatasets() {
+      const zhCounts = versionsData.map(v => {
+        const entry = changelogData.find(e => e.version === v.version);
+        return entry && entry.changes && entry.changes.zh ? entry.changes.zh.length : 0;
+      });
+      
+      const enCounts = versionsData.map(v => {
+        const entry = changelogData.find(e => e.version === v.version);
+        return entry && entry.changes && entry.changes.en ? entry.changes.en.length : 0;
+      });
+      
+      const labels = versionsData.map(v => v.version);
+      
+      if (currentView === 'zh') {
+        return [
+          {
+            label: '中文变更项',
+            data: zhCounts,
+            backgroundColor: 'rgba(46, 204, 113, 0.7)',
+            borderColor: '#2ecc71',
+            borderWidth: 1,
+            hoverBackgroundColor: 'rgba(46, 204, 113, 0.9)',
+            hoverBorderColor: '#2ecc71'
+          }
+        ];
+      } else if (currentView === 'en') {
+        return [
+          {
+            label: '英文变更项',
+            data: enCounts,
+            backgroundColor: 'rgba(243, 156, 18, 0.7)',
+            borderColor: '#f39c12',
+            borderWidth: 1,
+            hoverBackgroundColor: 'rgba(243, 156, 18, 0.9)',
+            hoverBorderColor: '#f39c12'
+          }
+        ];
+      } else { // 'all'
+        return [
+          {
+            label: '中文变更项',
+            data: zhCounts,
+            backgroundColor: 'rgba(46, 204, 113, 0.7)',
+            borderColor: '#2ecc71',
+            borderWidth: 1,
+            hoverBackgroundColor: 'rgba(46, 204, 113, 0.9)',
+            hoverBorderColor: '#2ecc71'
+          },
+          {
+            label: '英文变更项',
+            data: enCounts,
+            backgroundColor: 'rgba(243, 156, 18, 0.7)',
+            borderColor: '#f39c12',
+            borderWidth: 1,
+            hoverBackgroundColor: 'rgba(243, 156, 18, 0.9)',
+            hoverBorderColor: '#f39c12'
+          }
+        ];
+      }
+    }
+    
+    /**
+     * 监听暗色模式变化
+     */
+    function setupDarkModeListener() {
+      if (window.matchMedia) {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        mediaQuery.addEventListener('change', () => {
+          // 重新渲染图表以适应新的颜色模式
+          if (changelogData.length > 0) {
+            renderCharts();
+          }
+        });
+      }
+    }
+    
+    /**
+     * 页面加载完成后初始化
+     */
+    document.addEventListener('DOMContentLoaded', () => {
+      setupDarkModeListener();
+      loadData();
+    });
+  </script>
+</body>
+</html>

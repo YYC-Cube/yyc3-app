@@ -1,0 +1,127 @@
+version: '3.8'
+
+# Redis高可用部署配置
+# 包含1主2从Redis实例和3个哨兵节点
+
+x-redis-config: &redis-config
+  image: redis:7.2-alpine
+  restart: unless-stopped
+  volumes:
+    - ./config/redis-prod.conf:/usr/local/etc/redis/redis.conf
+    - redis-data:/data
+  networks:
+    - redis-network
+
+x-sentinel-config: &sentinel-config
+  image: redis:7.2-alpine
+  restart: unless-stopped
+  command: redis-sentinel /usr/local/etc/redis/sentinel.conf
+  volumes:
+    - ./config/sentinel.conf:/usr/local/etc/redis/sentinel.conf
+  depends_on:
+    - redis-master
+    - redis-slave-1
+    - redis-slave-2
+  networks:
+    - redis-network
+
+networks:
+  redis-network:
+    driver: bridge
+    name: redis-network
+
+volumes:
+  redis-data:
+    name: redis-data
+
+# Docker Healthcheck配置
+x-healthcheck: &healthcheck
+  healthcheck:
+    test: ["CMD", "redis-cli", "ping"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+
+# Redis Master
+redis-master:
+  <<: *redis-config
+  <<: *healthcheck
+  command: redis-server /usr/local/etc/redis/redis.conf
+  container_name: redis-master
+  ports:
+    - "6379:6379"
+  environment:
+    - REDIS_MODE=master
+
+# Redis Slave 1
+redis-slave-1:
+  <<: *redis-config
+  <<: *healthcheck
+  command: redis-server /usr/local/etc/redis/redis.conf --slaveof redis-master 6379
+  container_name: redis-slave-1
+  ports:
+    - "6380:6379"
+  environment:
+    - REDIS_MODE=slave
+
+# Redis Slave 2
+redis-slave-2:
+  <<: *redis-config
+  <<: *healthcheck
+  command: redis-server /usr/local/etc/redis/redis.conf --slaveof redis-master 6379
+  container_name: redis-slave-2
+  ports:
+    - "6381:6379"
+  environment:
+    - REDIS_MODE=slave
+
+# Sentinel 1
+redis-sentinel-1:
+  <<: *sentinel-config
+  <<: *healthcheck
+  container_name: redis-sentinel-1
+  ports:
+    - "26379:26379"
+
+# Sentinel 2
+redis-sentinel-2:
+  <<: *sentinel-config
+  <<: *healthcheck
+  container_name: redis-sentinel-2
+  ports:
+    - "26380:26379"
+
+# Sentinel 3
+redis-sentinel-3:
+  <<: *sentinel-config
+  <<: *healthcheck
+  container_name: redis-sentinel-3
+  ports:
+    - "26381:26379"
+
+# Redis API服务
+redis-api:
+  build:
+    context: ./api
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  container_name: redis-api
+  ports:
+    - "3101:3101"
+  depends_on:
+    - redis-master
+    - redis-slave-1
+    - redis-slave-2
+  environment:
+    - NODE_ENV=production
+    - PORT=3101
+    - REDIS_HOST=redis-master
+    - REDIS_PORT=6379
+    - REDIS_PASSWORD=redis_yyc3
+    - LOG_LEVEL=info
+    - CORS_ORIGIN=*
+  volumes:
+    - ./api:/app
+    - /var/log/redis:/var/log/redis
+  networks:
+    - redis-network
