@@ -37,7 +37,7 @@
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "pnpm": "^8.0.0",
+    "pnpm": "^10.25.0",
     "typescript": "^5.0.0"
   },
   "engines": {
